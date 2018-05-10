@@ -60,20 +60,10 @@ func main() {
 				for _, w := range report.Warnings {
 					fmt.Fprintf(
 						os.Stdout,
-						"(!) %s [%s]\n",
+						"CONFLICT: %s [%s]\n",
 						w.Message, w.Filepath,
 					)
 				}
-
-				term := "issue"
-				if len(report.Warnings) > 1 {
-					term = "issues"
-				}
-				fmt.Fprintf(
-					os.Stdout,
-					"\nEncountered %d %s during analysis.\n",
-					len(report.Warnings), term,
-				)
 				os.Exit(1)
 			}
 
