@@ -109,6 +109,46 @@ service ChannelChanger {
 }
 `
 
+const noChangeFieldIDsProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+}
+
+message NextRequest {}
+message PreviousRequest {}
+
+service ChannelChanger {
+  rpc Next(stream NextRequest) returns (Channel);
+  rpc Previous(PreviousRequest) returns (stream Channel);
+}
+`
+
+const changeFieldIDsProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4443;
+  bool bar = 59;
+}
+
+message NextRequest {}
+message PreviousRequest {}
+
+service ChannelChanger {
+  rpc Next(stream NextRequest) returns (Channel);
+  rpc Previous(PreviousRequest) returns (stream Channel);
+}
+`
+
 func TestParseOnReader(t *testing.T) {
 	r := strings.NewReader(simpleProto)
 	_, err := parse(r)
@@ -123,6 +163,10 @@ func TestUsingReservedFields(t *testing.T) {
 	warnings, ok := NoUsingReservedFields(curLock, updLock)
 	assert.False(t, ok)
 	assert.Len(t, warnings, 3)
+
+	warnings, ok = NoUsingReservedFields(updLock, updLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
 }
 
 func TestRemovingReservedFields(t *testing.T) {
@@ -133,6 +177,24 @@ func TestRemovingReservedFields(t *testing.T) {
 	warnings, ok := NoRemovingReservedFields(curLock, updLock)
 	assert.False(t, ok)
 	assert.Len(t, warnings, 5)
+
+	warnings, ok = NoRemovingReservedFields(updLock, updLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
+}
+
+func TestChangingFieldIDs(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noChangeFieldIDsProto)
+	updLock := parseTestProto(t, changeFieldIDsProto)
+
+	warnings, ok := NoChangingFieldIDs(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 2)
+
+	warnings, ok = NoChangingFieldIDs(updLock, updLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
 }
 
 func parseTestProto(t *testing.T, proto string) Protolock {
