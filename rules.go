@@ -8,7 +8,7 @@ var (
 	// are added to this package.
 	ruleFuncs = []RuleFunc{
 		NoUsingReservedFields,
-		NoRemoveReservedFields,
+		NoRemovingReservedFields,
 		NoChangeFieldIDs,
 		NoChangeFieldTypes,
 		NoRenamingFields,
@@ -16,7 +16,18 @@ var (
 	}
 
 	strictMode = true
+	debug      = false
 )
+
+// SetStrictMode enables the user to toggle strict mode on and off.
+func SetStrictMode(mode bool) {
+	strictMode = mode
+}
+
+// SetDebug enables the user to toggle debug mode on and off.
+func SetDebug(status bool) {
+	debug = status
+}
 
 // RuleFunc defines the common signature for a function which can compare
 // Protolock states and determine if issues exist.
@@ -58,9 +69,12 @@ type lockReservedNamesMap map[string]map[string]map[string]int
 // and will return a list of warnings if any message's previously reserved fields
 // are now being used as part of the same message.
 func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
+	if debug {
+		beginRuleDebug("NoUsingReservedFields")
+	}
 	reservedIDMap, reservedNameMap := getReservedFields(cur)
 
-	// add each messages field number to the list of numbers identified as
+	// add each messages field name/number to the existing list identified as
 	// reserved to analyze
 	for _, def := range upd.Definitions {
 		if reservedIDMap[def.Filepath] == nil {
@@ -123,6 +137,10 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 		}
 	}
 
+	if debug {
+		concludeRuleDebug("NoUsingReservedFields", warnings)
+	}
+
 	if warnings != nil {
 		return warnings, false
 	}
@@ -130,9 +148,63 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 	return nil, true
 }
 
-// NoRemoveReservedFields compares the current vs. updated Protolock definitions
+// NoRemovingReservedFields compares the current vs. updated Protolock definitions
 // and will return a list of warnings if any reserved field has been removed.
-func NoRemoveReservedFields(cur, upd Protolock) ([]Warning, bool) {
+func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
+	if !strictMode {
+		return nil, true
+	}
+
+	if debug {
+		beginRuleDebug("NoRemovingReservedFields")
+	}
+
+	var warnings []Warning
+	// check that all reserved fields on current Protolock remain in the
+	// updated Protolock
+	curReservedIDMap, curReservedNameMap := getReservedFields(cur)
+	updReservedIDMap, updReservedNameMap := getReservedFields(upd)
+	for filepath, msgMap := range curReservedIDMap {
+		for msgName, idMap := range msgMap {
+			for id := range idMap {
+				if _, ok := updReservedIDMap[filepath][msgName][id]; !ok {
+					msg := fmt.Sprintf(
+						"%s is missing ID: %d, a reserved field",
+						msgName, id,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: filepath,
+						Message:  msg,
+					})
+				}
+			}
+		}
+	}
+	for filepath, msgMap := range curReservedNameMap {
+		for msgName, nameMap := range msgMap {
+			for name := range nameMap {
+				if _, ok := updReservedNameMap[filepath][msgName][name]; !ok {
+					msg := fmt.Sprintf(
+						"%s is missing name: %s, a reserved field",
+						msgName, name,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: filepath,
+						Message:  msg,
+					})
+				}
+			}
+		}
+	}
+
+	if debug {
+		concludeRuleDebug("NoRemovingReservedFields", warnings)
+	}
+
+	if warnings != nil {
+		return warnings, false
+	}
+
 	return nil, true
 }
 
@@ -199,4 +271,18 @@ func getReservedFields(lock Protolock) (lockReservedIDsMap, lockReservedNamesMap
 	}
 
 	return reservedIDMap, reservedNameMap
+}
+
+func beginRuleDebug(name string) {
+	fmt.Println("run rule:", name)
+}
+
+func concludeRuleDebug(name string, warnings []Warning) {
+	fmt.Println("warnings:", len(warnings))
+	for i, w := range warnings {
+		msg := fmt.Sprintf("%d). %s [%s]", i+1, w.Message, w.Filepath)
+		fmt.Println(msg)
+	}
+	fmt.Println("end:", name)
+	fmt.Println("===")
 }
