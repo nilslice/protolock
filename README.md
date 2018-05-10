@@ -17,14 +17,15 @@ Similar in concept to the higher-level features of `git`, track and/or prevent c
 1. **Initialize** your repository: 
 
         $ protolock init
+        # creates a `proto.lock` file
 
-3. **Add changes** to protobuf messages or services: 
-
-        $ protolock commit
-
-2. **Check** that no breaking changes were made: 
+3. **Add changes** to .proto messages or services, verify no breaking changes made: 
 
         $ protolock status
+
+2. **Commit** a new state of your .protos (overwrites `proto.lock`): 
+
+        $ protolock commit
 
 4. **Integrate** into your protobuf compilation step: 
 
