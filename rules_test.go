@@ -213,6 +213,7 @@ const changingFieldNamesProto = `syntax = "proto3";
 package test;
 
 message Channel {
+  reserved "name", "foo";
   int64 id = 1;
   string name_2 = 2;
   string description_3 = 3;
@@ -242,12 +243,13 @@ func TestChangingFieldNames(t *testing.T) {
 
 	warnings, ok := NoChangingFieldNames(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 3)
+	assert.Len(t, warnings, 4)
 
 	warnings, ok = NoChangingFieldNames(updLock, updLock)
 	assert.True(t, ok)
 	assert.Len(t, warnings, 0)
 }
+
 func TestUsingReservedFields(t *testing.T) {
 	SetDebug(true)
 	curLock := parseTestProto(t, noUsingReservedFieldsProto)

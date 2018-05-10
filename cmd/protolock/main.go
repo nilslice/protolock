@@ -76,7 +76,7 @@ func main() {
 }
 
 func saveToLockFile(r io.Reader) error {
-	lockfile, err := os.Create("proto.lock")
+	lockfile, err := os.Create(protolock.LockFileName)
 	if err != nil {
 		return err
 	}

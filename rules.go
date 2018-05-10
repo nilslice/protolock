@@ -9,6 +9,7 @@ var (
 	ruleFuncs = []RuleFunc{
 		NoUsingReservedFields,
 		NoRemovingReservedFields,
+		NoDeprecatingFieldsWithoutReserve,
 		NoChangingFieldIDs,
 		NoChangingFieldTypes,
 		NoChangingFieldNames,
@@ -118,7 +119,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 			for id, count := range mm {
 				if count > 1 {
 					msg := fmt.Sprintf(
-						"%s is re-using ID: %d, a reserved field",
+						`"%s" is re-using ID: %d, a reserved field`,
 						msgName, id,
 					)
 					warnings = append(warnings, Warning{
@@ -137,7 +138,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 			for name, count := range mm {
 				if count > 1 {
 					msg := fmt.Sprintf(
-						`%s is re-using name: "%s", a reserved field`,
+						`"%s" is re-using name: "%s", a reserved field`,
 						msgName, name,
 					)
 					warnings = append(warnings, Warning{
@@ -182,7 +183,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 			for id := range idMap {
 				if _, ok := updReservedIDMap[path][msgName][id]; !ok {
 					msg := fmt.Sprintf(
-						"%s is missing ID: %d, a reserved field",
+						`"%s" is missing ID: %d, a reserved field`,
 						msgName, id,
 					)
 					warnings = append(warnings, Warning{
@@ -198,7 +199,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 			for name := range nameMap {
 				if _, ok := updReservedNameMap[path][msgName][name]; !ok {
 					msg := fmt.Sprintf(
-						`%s is missing name: "%s", a reserved field`,
+						`"%s" is missing name: "%s", a reserved field`,
 						msgName, name,
 					)
 					warnings = append(warnings, Warning{
@@ -241,7 +242,7 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 				if ok {
 					if updFieldID != fieldID {
 						msg := fmt.Sprintf(
-							`%s field: "%s" has a different ID: %d, previously %d`,
+							`"%s" field: "%s" has a different ID: %d, previously %d`,
 							msgName, fieldName, updFieldID, fieldID,
 						)
 						warnings = append(warnings, Warning{
@@ -284,7 +285,7 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 				if ok {
 					if updField.Type != field.Type {
 						msg := fmt.Sprintf(
-							`%s field: "%s" has a different type: %s, previously %s`,
+							`"%s" field: "%s" has a different type: %s, previously %s`,
 							msgName, fieldName, updField.Type, field.Type,
 						)
 						warnings = append(warnings, Warning{
@@ -295,7 +296,7 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 
 					if updField.IsRepeated != field.IsRepeated {
 						msg := fmt.Sprintf(
-							`%s field: "%s" has a different "repeated" status: %t, previously %t`,
+							`"%s" field: "%s" has a different "repeated" status: %t, previously %t`,
 							msgName, fieldName, updField.IsRepeated, field.IsRepeated,
 						)
 						warnings = append(warnings, Warning{
@@ -344,7 +345,7 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 				if ok {
 					if updFieldName != fieldName {
 						msg := fmt.Sprintf(
-							`%s field: "%s" (ID: %d) has an updated name, previously "%s"`,
+							`"%s" field: "%s" ID: %d has an updated name, previously "%s"`,
 							msgName, updFieldName, fieldID, fieldName,
 						)
 						warnings = append(warnings, Warning{
@@ -383,8 +384,61 @@ func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
 // without a corresponding reservation of that field or name.
 func NoDeprecatingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 	if !strict {
-
+		return nil, true
 	}
+
+	if debug {
+		beginRuleDebug("NoDeprecatingFieldsWithoutReserve")
+	}
+
+	var warnings []Warning
+	// check that if a field name from the current Protolock is not retained
+	// in the updated Protolock, then the field's name and ID shoule become
+	// reserved within the parent message
+	curFieldMap := getFieldMap(cur)
+	updFieldMap := getFieldMap(upd)
+	for path, msgMap := range curFieldMap {
+		for msgName, fieldMap := range msgMap {
+			for fieldName, field := range fieldMap {
+				_, ok := updFieldMap[path][msgName][fieldName]
+				if !ok {
+					// check that the field name and ID are
+					// both in the reserved fields for this
+					// message
+					resIDsMap, resNamesMap := getReservedFields(upd)
+					if _, ok := resIDsMap[path][msgName][field.ID]; !ok {
+						msg := fmt.Sprintf(
+							`"%s" ID: "%d" has been removed, but is not "reserved"`,
+							msgName, field.ID,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: path,
+							Message:  msg,
+						})
+					}
+					if _, ok := resNamesMap[path][msgName][field.Name]; !ok {
+						msg := fmt.Sprintf(
+							`"%s" field: "%s" has been removed, but is not "reserved"`,
+							msgName, field.Name,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: path,
+							Message:  msg,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	if debug {
+		concludeRuleDebug("NoDeprecatingFieldsWithoutReserve", warnings)
+	}
+
+	if warnings != nil {
+		return warnings, false
+	}
+
 	return nil, true
 }
 
@@ -420,6 +474,8 @@ func getReservedFields(lock Protolock) (lockIDsMap, lockNamesMap) {
 	return reservedIDMap, reservedNameMap
 }
 
+// getFieldsIDName gets all the fields mapped by the field ID to its name for
+// all messages.
 func getFieldsIDName(lock Protolock) lockFieldIDNameMap {
 	fieldIDNameMap := make(lockFieldIDNameMap)
 

@@ -13,7 +13,7 @@ import (
 	"github.com/emicklei/proto"
 )
 
-const lockFileName = "proto.lock"
+const LockFileName = "proto.lock"
 
 type Protolock struct {
 	Definitions []Definition `json:"definitions,omitempty"`
@@ -153,7 +153,7 @@ func withMessage(m *proto.Message) {
 
 // openLockFile opens and returns the lock file on disk for reading.
 func openLockFile() (io.ReadCloser, error) {
-	f, err := os.Open(lockFileName)
+	f, err := os.Open(LockFileName)
 	if err != nil {
 		return nil, err
 	}
@@ -209,8 +209,6 @@ func getUpdatedLock() (*Protolock, error) {
 	// files is a map of filepaths to string buffers to be joined into the
 	// proto.lock file.
 	files := make(map[string]Entry)
-	// TODO: consider:
-	// files := make(map[*proto.Package]Entry)
 
 	root, err := os.Getwd()
 	if err != nil {
