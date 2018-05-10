@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/emicklei/proto"
 )
@@ -182,10 +183,16 @@ func protolockFromReader(r io.Reader) (Protolock, error) {
 // Report can be ignored.
 func compare(current, update Protolock) (Report, error) {
 	var warnings []Warning
+	var wg sync.WaitGroup
 	for _, fn := range ruleFuncs {
-		if w, ok := fn(current, update); !ok {
-			warnings = append(warnings, w...)
-		}
+		wg.Add(1)
+		go func() {
+			if w, ok := fn(current, update); !ok {
+				warnings = append(warnings, w...)
+			}
+			wg.Done()
+		}()
+		wg.Wait()
 	}
 
 	if len(warnings) != 0 {
