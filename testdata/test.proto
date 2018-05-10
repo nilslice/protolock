@@ -1,0 +1,19 @@
+syntax = "proto3";
+package dataset;
+
+message Channel {
+  reserved 4, 8 to 11;
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  string bar = 5;
+}
+
+message NextRequest {}
+message PreviousRequest {}
+
+service ChannelChanger {
+  rpc Next(stream NextRequest) returns (Channel);
+  rpc Previous(PreviousRequest) returns (stream Channel);
+}
