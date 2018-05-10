@@ -214,7 +214,7 @@ package test;
 
 message Channel {
   reserved "name", "foo";
-  int64 id = 1;
+  int64 channel_id = 1;
   string name_2 = 2;
   string description_3 = 3;
   string foo_baz = 4;
