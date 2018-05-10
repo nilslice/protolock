@@ -37,9 +37,10 @@ type Message struct {
 }
 
 type Field struct {
-	ID   int    `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-	Type string `json:"type,omitempty"`
+	ID         int    `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Type       string `json:"type,omitempty"`
+	IsRepeated bool   `json:"is_repeated,omitempty"`
 }
 
 type Service struct {
@@ -119,9 +120,10 @@ func withMessage(m *proto.Message) {
 	for _, v := range m.Elements {
 		if f, ok := v.(*proto.NormalField); ok {
 			msg.Fields = append(msg.Fields, Field{
-				ID:   f.Sequence,
-				Name: f.Name,
-				Type: f.Type,
+				ID:         f.Sequence,
+				Name:       f.Name,
+				Type:       f.Type,
+				IsRepeated: f.Repeated,
 			})
 		}
 
