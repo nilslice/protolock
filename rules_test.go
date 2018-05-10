@@ -149,6 +149,46 @@ service ChannelChanger {
 }
 `
 
+const noChangingFieldTypesProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+}
+
+message NextRequest {}
+message PreviousRequest {}
+
+service ChannelChanger {
+  rpc Next(stream NextRequest) returns (Channel);
+  rpc Previous(PreviousRequest) returns (stream Channel);
+}
+`
+
+const changingFieldTypesProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int32 id = 1;
+  bool name = 2;
+  string description = 3;
+  string foo = 4;
+  repeated bool bar = 5;
+}
+
+message NextRequest {}
+message PreviousRequest {}
+
+service ChannelChanger {
+  rpc Next(stream NextRequest) returns (Channel);
+  rpc Previous(PreviousRequest) returns (stream Channel);
+}
+`
+
 func TestParseOnReader(t *testing.T) {
 	r := strings.NewReader(simpleProto)
 	_, err := parse(r)
@@ -165,6 +205,20 @@ func TestUsingReservedFields(t *testing.T) {
 	assert.Len(t, warnings, 3)
 
 	warnings, ok = NoUsingReservedFields(updLock, updLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
+}
+
+func TestChangingFieldTypes(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noChangingFieldTypesProto)
+	updLock := parseTestProto(t, changingFieldTypesProto)
+
+	warnings, ok := NoChangingFieldTypes(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 3)
+
+	warnings, ok = NoChangingFieldTypes(updLock, updLock)
 	assert.True(t, ok)
 	assert.Len(t, warnings, 0)
 }

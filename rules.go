@@ -68,6 +68,10 @@ type lockIDsMap map[string]map[string]map[int]int
 */
 type lockNamesMap map[string]map[string]map[string]int
 
+// lockTypesMap:
+// table of filepath -> message name -> field name -> field type
+type lockFieldMap map[string]map[string]map[string]Field
+
 // NoUsingReservedFields compares the current vs. updated Protolock definitions
 // and will return a list of warnings if any message's previously reserved fields
 // are now being used as part of the same message.
@@ -260,6 +264,54 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 // NoChangingFieldTypes compares the current vs. updated Protolock definitions and
 // will return a list of warnings if any field type has been changed.
 func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
+	if debug {
+		beginRuleDebug("NoChangingFieldTypes")
+	}
+
+	curFieldMap := getFieldMap(cur)
+	updFieldMap := getFieldMap(upd)
+	var warnings []Warning
+	// check that the current Protolock message's field types are the same
+	// for each of the same message's fields in the updated Protolock
+	for path, msgMap := range curFieldMap {
+		for msgName, fieldMap := range msgMap {
+			for fieldName, field := range fieldMap {
+				updField, ok := updFieldMap[path][msgName][fieldName]
+				if ok {
+					if updField.Type != field.Type {
+						msg := fmt.Sprintf(
+							`%s field: "%s" has a different type: %s, previously %s`,
+							msgName, fieldName, updField.Type, field.Type,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: path,
+							Message:  msg,
+						})
+					}
+
+					if updField.IsRepeated != field.IsRepeated {
+						msg := fmt.Sprintf(
+							`%s field: "%s" has a different "repeated" status: %t, previously %t`,
+							msgName, fieldName, updField.IsRepeated, field.IsRepeated,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: path,
+							Message:  msg,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	if debug {
+		concludeRuleDebug("NoChangingFieldTypes", warnings)
+	}
+
+	if warnings != nil {
+		return warnings, false
+	}
+
 	return nil, true
 }
 
@@ -336,6 +388,28 @@ func getNonReservedFields(lock Protolock) lockNamesMap {
 	}
 
 	return nameIDMap
+}
+
+// getFieldMap gets all the field names and types, and stashes them in a
+// lockTypesMap to be checked against.
+func getFieldMap(lock Protolock) lockFieldMap {
+	nameTypeMap := make(lockFieldMap)
+
+	for _, def := range lock.Definitions {
+		if nameTypeMap[def.Filepath] == nil {
+			nameTypeMap[def.Filepath] = make(map[string]map[string]Field)
+		}
+		for _, msg := range def.Def.Messages {
+			for _, field := range msg.Fields {
+				if nameTypeMap[def.Filepath][msg.Name] == nil {
+					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Field)
+				}
+				nameTypeMap[def.Filepath][msg.Name][field.Name] = field
+			}
+		}
+	}
+
+	return nameTypeMap
 }
 
 func beginRuleDebug(name string) {
