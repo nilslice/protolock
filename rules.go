@@ -15,13 +15,13 @@ var (
 		NoRemovingRPCs,
 	}
 
-	strictMode = true
-	debug      = false
+	strict = true
+	debug  = false
 )
 
-// SetStrictMode enables the user to toggle strict mode on and off.
-func SetStrictMode(mode bool) {
-	strictMode = mode
+// SetStrict enables the user to toggle strict mode on and off.
+func SetStrict(mode bool) {
+	strict = mode
 }
 
 // SetDebug enables the user to toggle debug mode on and off.
@@ -68,9 +68,13 @@ type lockIDsMap map[string]map[string]map[int]int
 */
 type lockNamesMap map[string]map[string]map[string]int
 
-// lockTypesMap:
+// lockFieldMap:
 // table of filepath -> message name -> field name -> field type
 type lockFieldMap map[string]map[string]map[string]Field
+
+// lockFieldIDNameMap:
+// table of filepath -> message name -> field ID -> field name
+type lockFieldIDNameMap map[string]map[string]map[int]string
 
 // NoUsingReservedFields compares the current vs. updated Protolock definitions
 // and will return a list of warnings if any message's previously reserved fields
@@ -160,7 +164,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 // and will return a list of warnings if any reserved field has been removed. This
 // rule is only enforced when strict mode is enabled.
 func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
-	if !strictMode {
+	if !strict {
 		return nil, true
 	}
 
@@ -319,8 +323,46 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 // will return a list of warnings if any message's previous fields have been
 // renamed. This rule is only enforced when strict mode is enabled.
 func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
-	if !strictMode {
+	if debug {
+		beginRuleDebug("NoChangingFieldNames")
+	}
+
+	if !strict {
 		return nil, true
+	}
+
+	curFieldMap := getFieldsIDName(cur)
+	updFieldMap := getFieldsIDName(upd)
+
+	var warnings []Warning
+	// check that the current Protolock messages' field names are equal to
+	// their relative messages' field names in the updated Protolock
+	for path, msgMap := range curFieldMap {
+		for msgName, fieldMap := range msgMap {
+			for fieldID, fieldName := range fieldMap {
+				updFieldName, ok := updFieldMap[path][msgName][fieldID]
+				if ok {
+					if updFieldName != fieldName {
+						msg := fmt.Sprintf(
+							`%s field: "%s" (ID: %d) has an updated name, previously "%s"`,
+							msgName, updFieldName, fieldID, fieldName,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: path,
+							Message:  msg,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	if debug {
+		concludeRuleDebug("NoChangingFieldNames", warnings)
+	}
+
+	if warnings != nil {
+		return warnings, false
 	}
 
 	return nil, true
@@ -330,8 +372,18 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 // will return a list of warnings if any RPCs provided by a Service have been
 // removed. This rule is only enforced when strict mode is enabled.
 func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
-	if !strictMode {
+	if !strict {
 		return nil, true
+	}
+	return nil, true
+}
+
+// NoDeprecatingFieldsWithoutReserve compares the current vs. updated Protolock
+// definitions and will return a list of warnings if any field has been removed
+// without a corresponding reservation of that field or name.
+func NoDeprecatingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
+	if !strict {
+
 	}
 	return nil, true
 }
@@ -366,6 +418,26 @@ func getReservedFields(lock Protolock) (lockIDsMap, lockNamesMap) {
 	}
 
 	return reservedIDMap, reservedNameMap
+}
+
+func getFieldsIDName(lock Protolock) lockFieldIDNameMap {
+	fieldIDNameMap := make(lockFieldIDNameMap)
+
+	for _, def := range lock.Definitions {
+		if fieldIDNameMap[def.Filepath] == nil {
+			fieldIDNameMap[def.Filepath] = make(map[string]map[int]string)
+		}
+		for _, msg := range def.Def.Messages {
+			for _, field := range msg.Fields {
+				if fieldIDNameMap[def.Filepath][msg.Name] == nil {
+					fieldIDNameMap[def.Filepath][msg.Name] = make(map[int]string)
+				}
+				fieldIDNameMap[def.Filepath][msg.Name][field.ID] = field.Name
+			}
+		}
+	}
+
+	return fieldIDNameMap
 }
 
 // getNonReservedFields gets all the reserved field numbers and names, and stashes
@@ -413,15 +485,15 @@ func getFieldMap(lock Protolock) lockFieldMap {
 }
 
 func beginRuleDebug(name string) {
-	fmt.Println("run rule:", name)
+	fmt.Println("RUN RULE:", name)
 }
 
 func concludeRuleDebug(name string, warnings []Warning) {
-	fmt.Println("warnings:", len(warnings))
+	fmt.Println("# Warnings:", len(warnings))
 	for i, w := range warnings {
 		msg := fmt.Sprintf("%d). %s [%s]", i+1, w.Message, w.Filepath)
 		fmt.Println(msg)
 	}
-	fmt.Println("end:", name)
+	fmt.Println("END RULE:", name)
 	fmt.Println("===")
 }

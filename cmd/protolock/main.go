@@ -10,17 +10,17 @@ import (
 )
 
 var (
-	debug      = flag.Bool("debug", false, "toggle debug mode for verbose output")
-	strictMode = flag.Bool("strict", true, "toggle strict mode, to determine which rules are enforced")
+	debug  = flag.Bool("debug", false, "toggle debug mode for verbose output")
+	strict = flag.Bool("strict", true, "toggle strict mode, to determine which rules are enforced")
 )
 
 func main() {
 	flag.Parse()
 
 	// XXX: currently here as placeholder until better CLI implementation
-	// is completed. This includes debug and strictMode vars in block above.
+	// is completed. This includes debug and strict vars in block above.
 	protolock.SetDebug(*debug)
-	protolock.SetStrictMode(*strictMode)
+	protolock.SetStrict(*strict)
 
 	if len(os.Args) < 2 {
 		os.Exit(0)
