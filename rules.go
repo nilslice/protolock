@@ -9,7 +9,7 @@ var (
 	ruleFuncs = []RuleFunc{
 		NoUsingReservedFields,
 		NoRemovingReservedFields,
-		NoDeprecatingFieldsWithoutReserve,
+		NoRemovingFieldsWithoutReserve,
 		NoChangingFieldIDs,
 		NoChangingFieldTypes,
 		NoChangingFieldNames,
@@ -84,7 +84,7 @@ type lockFieldIDNameMap map[string]map[string]map[int]string
 
 // NoUsingReservedFields compares the current vs. updated Protolock definitions
 // and will return a list of warnings if any message's previously reserved fields
-// are now being used as part of the same message.
+// or IDs are now being used as part of the same message.
 func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 	if debug {
 		beginRuleDebug("NoUsingReservedFields")
@@ -421,16 +421,12 @@ func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
 	return nil, true
 }
 
-// NoDeprecatingFieldsWithoutReserve compares the current vs. updated Protolock
+// NoRemovingFieldsWithoutReserve compares the current vs. updated Protolock
 // definitions and will return a list of warnings if any field has been removed
 // without a corresponding reservation of that field or name.
-func NoDeprecatingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
-	if !strict {
-		return nil, true
-	}
-
+func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 	if debug {
-		beginRuleDebug("NoDeprecatingFieldsWithoutReserve")
+		beginRuleDebug("NoRemovingFieldsWithoutReserve")
 	}
 
 	var warnings []Warning
@@ -474,7 +470,7 @@ func NoDeprecatingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 	}
 
 	if debug {
-		concludeRuleDebug("NoDeprecatingFieldsWithoutReserve", warnings)
+		concludeRuleDebug("NoRemovingFieldsWithoutReserve", warnings)
 	}
 
 	if warnings != nil {
@@ -488,10 +484,6 @@ func NoDeprecatingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 // definitions and will return a list of warnings if any RPC signature has been
 // changed while using the same name.
 func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
-	if !strict {
-		return nil, true
-	}
-
 	if debug {
 		beginRuleDebug("NoChangingRPCSignature")
 	}
