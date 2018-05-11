@@ -23,6 +23,8 @@ Similar in concept to the higher-level features of `git`, track and/or prevent c
 3. **Add changes** to .proto messages or services, verify no breaking changes made: 
 
         $ protolock status
+        CONFLICT: "Channel" is missing ID: 108, which had been reserved [path/to/file.proto]
+        CONFLICT: "Channel" is missing ID: 109, which had been reserved [path/to/file.proto]
 
 2. **Commit** a new state of your .protos (overwrites `proto.lock`): 
 
@@ -30,7 +32,7 @@ Similar in concept to the higher-level features of `git`, track and/or prevent c
 
 4. **Integrate** into your protobuf compilation step: 
 
-        $ protolock status && protoc --I ...
+        $ protolock status && protoc -I ...
 
 In all, prevent yourself from compiling your protobufs and generating code if breaking changes have been made.
 

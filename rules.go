@@ -188,7 +188,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 			for id := range idMap {
 				if _, ok := updReservedIDMap[path][msgName][id]; !ok {
 					msg := fmt.Sprintf(
-						`"%s" is missing ID: %d, a reserved field`,
+						`"%s" is missing ID: %d, which had been reserved`,
 						msgName, id,
 					)
 					warnings = append(warnings, Warning{
@@ -204,7 +204,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 			for name := range nameMap {
 				if _, ok := updReservedNameMap[path][msgName][name]; !ok {
 					msg := fmt.Sprintf(
-						`"%s" is missing name: "%s", a reserved field`,
+						`"%s" is missing name: "%s", which had been reserved`,
 						msgName, name,
 					)
 					warnings = append(warnings, Warning{
