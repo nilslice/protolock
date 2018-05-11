@@ -15,5 +15,6 @@ jobs:
       - run: go install ./...
       - run: protolock
       - run: protolock init
+      - run: cat proto.lock | grep "testdata/test.proto"
       - run: protolock status
       - run: protolock commit
