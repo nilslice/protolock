@@ -8,7 +8,13 @@ jobs:
     working_directory: /go/src/github.com/nilslice/protolock
     steps:
       - checkout
-
-      # specify any bash command here prefixed with `run: `
+      # fetch depenencies, test code
       - run: go get -v -t -d ./...
       - run: go test -v ./...
+      # install binary, test commands
+      - run: go install ./...
+      - run: protolock
+      - run: protolock init
+      - run: cat proto.lock | grep "testdata/test.proto"
+      - run: protolock status
+      - run: protolock commit
