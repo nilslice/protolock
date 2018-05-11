@@ -1,5 +1,10 @@
 package protolock
 
+import (
+	"errors"
+	"os"
+)
+
 // Status will report on any issues encountered when comparing the updated tree
 // of parsed proto files and the current proto.lock file.
 func Status() (Report, error) {
@@ -10,6 +15,10 @@ func Status() (Report, error) {
 
 	lockFile, err := openLockFile()
 	if err != nil {
+		if os.IsNotExist(err) {
+			msg := `no "proto.lock" file found, first run "init"`
+			return Report{}, errors.New(msg)
+		}
 		return Report{}, err
 	}
 	defer lockFile.Close()

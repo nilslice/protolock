@@ -14,7 +14,7 @@ const protoSuffix = ".proto"
 // use as needed.
 func Init() (io.Reader, error) {
 	if _, err := os.Stat(LockFileName); err == nil && !os.IsNotExist(err) {
-		fmt.Println(`A "proto.lock" file was already found, use "commit" to update`)
+		fmt.Println(`a "proto.lock" file was already found, use "commit" to update`)
 		os.Exit(1)
 	}
 	updated, err := getUpdatedLock()
