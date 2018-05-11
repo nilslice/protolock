@@ -12,8 +12,21 @@ Ever _accidentally_ break your API compatibility while you're busy fixing proble
 `protolock` attempts to help prevent this from happening.
 
 ## Usage
+```bash
+protolock <command> [options]
 
-Similar in concept to the higher-level features of `git`, track and/or prevent changes to your `.proto` files. 
+Commands:
+	-h, --help, help	display the usage information for protolock
+	init			initialize a proto.lock file from current tree
+	status			check for breaking changes and report conflicts
+	commit			overwrite proto.lock file with current tree
+
+Options:
+	--strict [true]		enable strict mode and enforce all built-in rules
+	--debug	[false]		enable debug mode and output debug messages
+```
+
+## Overview
 
 1. **Initialize** your repository: 
 
@@ -38,7 +51,7 @@ In all, prevent yourself from compiling your protobufs and generating code if br
 
 **Recommended:** commit the output `proto.lock` file into your version control system
 
-## Rules
+## Rules Enforced
 
 ### No Using Reserved Fields
 Compares the current vs. updated Protolock definitions and will return a list of 

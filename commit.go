@@ -10,7 +10,7 @@ import (
 // use as needed.
 func Commit() (io.Reader, error) {
 	if _, err := os.Stat(LockFileName); err != nil && os.IsNotExist(err) {
-		fmt.Println(`No "proto.lock" file found, first run "init"`)
+		fmt.Println(`no "proto.lock" file found, first run "init"`)
 		os.Exit(1)
 	}
 	updated, err := getUpdatedLock()

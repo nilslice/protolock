@@ -9,24 +9,46 @@ import (
 	"github.com/nilslice/protolock"
 )
 
+const usage = `Track your .proto files and prevent incompatible changes to field names and numbers.
+
+Copyright: Steve Manuel <nilslice@gmail.com>
+Released under the BSD-3-Clause license.
+
+Usage:
+	protolock <command> [options]
+
+Commands:
+	-h, --help, help	display the usage information for protolock
+	init			initialize a proto.lock file from current tree
+	status			check for breaking changes and report conflicts
+	commit			overwrite proto.lock file with current tree
+
+Options:
+	--strict [true]		enable strict mode and enforce all built-in rules
+	--debug	[false]		enable debug mode and output debug messages
+`
+
 var (
-	debug  = flag.Bool("debug", false, "toggle debug mode for verbose output")
-	strict = flag.Bool("strict", true, "toggle strict mode, to determine which rules are enforced")
+	options = flag.NewFlagSet("options", flag.ExitOnError)
+	debug   = options.Bool("debug", false, "toggle debug mode for verbose output")
+	strict  = options.Bool("strict", true, "toggle strict mode, to determine which rules are enforced")
 )
 
 func main() {
-	flag.Parse()
-
-	// XXX: currently here as placeholder until better CLI implementation
-	// is completed. This includes debug and strict vars in block above.
-	protolock.SetDebug(*debug)
-	protolock.SetStrict(*strict)
-
+	// exit if no command (i.e. help, -h, --help, init, status, or commit)
 	if len(os.Args) < 2 {
 		os.Exit(0)
 	}
 
+	// parse and set options flags
+	options.Parse(os.Args[2:])
+	protolock.SetDebug(*debug)
+	protolock.SetStrict(*strict)
+
+	// switch through known commands
 	switch os.Args[1] {
+	case "-h", "--help", "help":
+		fmt.Println(usage)
 	case "init":
 		r, err := protolock.Init()
 		if err != nil {
@@ -71,7 +93,7 @@ func main() {
 		}
 
 	default:
-		fmt.Println(os.Args)
+		os.Exit(0)
 	}
 }
 
