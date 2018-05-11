@@ -268,10 +268,64 @@ service ChannelChanger {
 }
 `
 
+const noChangingRPCSignatureProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+}
+
+message NextRequest {}
+message PreviousRequest {}
+
+service ChannelChanger {
+  rpc Next(stream NextRequest) returns (Channel);
+  rpc Previous(PreviousRequest) returns (stream Channel);
+}
+`
+
+const changingRPCSignatureProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+}
+
+message NextRequest {}
+message PreviousRequest {}
+
+service ChannelChanger {
+  rpc Next(NextRequest) returns (ChannelDifferent);
+  rpc Previous(stream PreviousRequest) returns (stream Channel);
+}
+`
+
 func TestParseOnReader(t *testing.T) {
 	r := strings.NewReader(simpleProto)
 	_, err := parse(r)
 	assert.NoError(t, err)
+}
+
+func TestChangingRPCSignature(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noChangingRPCSignatureProto)
+	updLock := parseTestProto(t, changingRPCSignatureProto)
+
+	warnings, ok := NoChangingRPCSignature(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 3)
+
+	warnings, ok = NoChangingRPCSignature(updLock, updLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
 }
 
 func TestRemovingServiceRPCs(t *testing.T) {

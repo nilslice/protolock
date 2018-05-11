@@ -14,6 +14,7 @@ var (
 		NoChangingFieldTypes,
 		NoChangingFieldNames,
 		NoRemovingRPCs,
+		NoChangingRPCSignature,
 	}
 
 	strict = true
@@ -72,6 +73,10 @@ type lockNamesMap map[string]map[string]map[string]int
 // lockFieldMap:
 // table of filepath -> message name -> field name -> field type
 type lockFieldMap map[string]map[string]map[string]Field
+
+// lockRPCMap:
+// table of filepath -> service name -> rpc name -> rpc type
+type lockRPCMap map[string]map[string]map[string]RPC
 
 // lockFieldIDNameMap:
 // table of filepath -> message name -> field ID -> field name
@@ -479,6 +484,91 @@ func NoDeprecatingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 	return nil, true
 }
 
+// NoChangingRPCSignature compares the current vs. updated Protolock
+// definitions and will return a list of warnings if any RPC signature has been
+// changed while using the same name.
+func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
+	if !strict {
+		return nil, true
+	}
+
+	if debug {
+		beginRuleDebug("NoChangingRPCSignature")
+	}
+
+	var warnings []Warning
+	// check that no breaking changes to the signature of an RPC have been
+	// made between the current Protolock and the updated Protolock
+	curRPCMap := getRPCMap(cur)
+	updRPCMap := getRPCMap(upd)
+	for path, svcMap := range curRPCMap {
+		for svcName, rpcMap := range svcMap {
+			for rpcName, rpc := range rpcMap {
+				updRPC, ok := updRPCMap[path][svcName][rpcName]
+				if !ok {
+					continue
+				}
+
+				// check that stream option and type are the same
+				// for both the RPC's request and response
+				if rpc.InStreamed != updRPC.InStreamed {
+					msg := fmt.Sprintf(
+						`"%s" RPC: "%s" input stream identifier has changed, previously: %t`,
+						svcName, rpcName, rpc.InStreamed,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: path,
+						Message:  msg,
+					})
+				}
+
+				if rpc.OutStreamed != updRPC.OutStreamed {
+					msg := fmt.Sprintf(
+						`"%s" RPC: "%s" output stream identifier has changed, previously: %t`,
+						svcName, rpcName, rpc.OutStreamed,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: path,
+						Message:  msg,
+					})
+				}
+
+				if rpc.InType != updRPC.InType {
+					msg := fmt.Sprintf(
+						`"%s" RPC: "%s" input type has changed, previously: %s`,
+						svcName, rpcName, rpc.InType,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: path,
+						Message:  msg,
+					})
+				}
+
+				if rpc.OutType != updRPC.OutType {
+					msg := fmt.Sprintf(
+						`"%s" RPC: "%s" output type has changed, previously: %s`,
+						svcName, rpcName, rpc.OutType,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: path,
+						Message:  msg,
+					})
+				}
+			}
+		}
+	}
+
+	if debug {
+		concludeRuleDebug("NoChangingRPCSignature", warnings)
+	}
+
+	if warnings != nil {
+		return warnings, false
+	}
+
+	return nil, true
+}
+
 // getReservedFields gets all the reserved field numbers and names, and stashes
 // them in a lockIDsMap and lockNamesMap to be checked against.
 func getReservedFields(lock Protolock) (lockIDsMap, lockNamesMap) {
@@ -556,7 +646,7 @@ func getNonReservedFields(lock Protolock) lockNamesMap {
 }
 
 // getFieldMap gets all the field names and types, and stashes them in a
-// lockTypesMap to be checked against.
+// lockFieldMap to be checked against.
 func getFieldMap(lock Protolock) lockFieldMap {
 	nameTypeMap := make(lockFieldMap)
 
@@ -596,6 +686,28 @@ func getServicesRPCsMap(lock Protolock) lockNamesMap {
 	}
 
 	return servicesRPCsMap
+}
+
+// getRPCMap gets all the RPC names and types, and stashes them in a
+// lockRPCMap to be checked against.
+func getRPCMap(lock Protolock) lockRPCMap {
+	rpcTypeMap := make(lockRPCMap)
+
+	for _, def := range lock.Definitions {
+		if rpcTypeMap[def.Filepath] == nil {
+			rpcTypeMap[def.Filepath] = make(map[string]map[string]RPC)
+		}
+		for _, svc := range def.Def.Services {
+			for _, rpc := range svc.RPCs {
+				if rpcTypeMap[def.Filepath][svc.Name] == nil {
+					rpcTypeMap[def.Filepath][svc.Name] = make(map[string]RPC)
+				}
+				rpcTypeMap[def.Filepath][svc.Name][rpc.Name] = rpc
+			}
+		}
+	}
+
+	return rpcTypeMap
 }
 
 func beginRuleDebug(name string) {
