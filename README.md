@@ -1,5 +1,3 @@
-### Work In Progress
-
 # protolock
 
 Track your `.proto` files and prevent incompatible changes to field names and numbers.
@@ -37,6 +35,51 @@ Similar in concept to the higher-level features of `git`, track and/or prevent c
 In all, prevent yourself from compiling your protobufs and generating code if breaking changes have been made.
 
 **Recommended:** commit the output `proto.lock` file into your version control system
+
+## Rules
+
+### No Using Reserved Fields
+Compares the current vs. updated Protolock definitions and will return a list of 
+warnings if any message's previously reserved fields or IDs are now being used 
+as part of the same message.
+
+### No Removing Reserved Fields
+Compares the current vs. updated Protolock definitions and will return a list of 
+warnings if any reserved field has been removed. 
+
+**Note:** This rule is only enforced when strict mode is enabled.
+
+
+### No Changing Field IDs
+Compares the current vs. updated Protolock definitions and will return a list of 
+warnings if any field ID number has been changed.
+
+
+### No Changing Field Types
+Compares the current vs. updated Protolock definitions and will return a list of 
+warnings if any field type has been changed.
+
+
+### No Changing Field Names
+Compares the current vs. updated Protolock definitions and will return a list of 
+warnings if any message's previous fields have been renamed. 
+
+**Note:** This rule is only enforced when strict mode is enabled. 
+
+### No Removing Fields Without Reserve
+Compares the current vs. updated Protolock definitions and will return a list of 
+warnings if any field has been removed without a corresponding reservation of 
+that field or name.
+
+### No Removing RPCs
+Compares the current vs. updated Protolock definitions and will return a list of 
+warnings if any RPCs provided by a Service have been removed. 
+
+**Note:** This rule is only enforced when strict mode is enabled. 
+
+### No Changing RPC Signature
+Compares the current vs. updated Protolock definitions and will return a list of 
+warnings if any RPC signature has been changed while using the same name.
 
 ---
 
