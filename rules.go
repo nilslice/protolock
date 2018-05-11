@@ -324,12 +324,12 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 // will return a list of warnings if any message's previous fields have been
 // renamed. This rule is only enforced when strict mode is enabled.
 func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
-	if debug {
-		beginRuleDebug("NoChangingFieldNames")
-	}
-
 	if !strict {
 		return nil, true
+	}
+
+	if debug {
+		beginRuleDebug("NoChangingFieldNames")
 	}
 
 	curFieldMap := getFieldsIDName(cur)
@@ -376,6 +376,43 @@ func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
 	if !strict {
 		return nil, true
 	}
+
+	if debug {
+		beginRuleDebug("NoRemovingRPCs")
+	}
+
+	var warnings []Warning
+	// check that all current Protolock services' RPCs are still in the
+	// updated Protolock
+	curServices := getServicesRPCsMap(cur)
+	updServices := getServicesRPCsMap(upd)
+
+	for path, svcMap := range curServices {
+		for svcName, rpcMap := range svcMap {
+			for rpcName := range rpcMap {
+				_, ok := updServices[path][svcName][rpcName]
+				if !ok {
+					msg := fmt.Sprintf(
+						`"%s" is missing RPC: "%s", which should be available`,
+						svcName, rpcName,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: path,
+						Message:  msg,
+					})
+				}
+			}
+		}
+	}
+
+	if debug {
+		concludeRuleDebug("NoRemovingRPCs", warnings)
+	}
+
+	if warnings != nil {
+		return warnings, false
+	}
+
 	return nil, true
 }
 
@@ -538,6 +575,27 @@ func getFieldMap(lock Protolock) lockFieldMap {
 	}
 
 	return nameTypeMap
+}
+
+// getServicesRPCsMap gets all the RPCs for the Services in a Protolock and
+// stashes them in a lockNamesMap to be checked against.
+func getServicesRPCsMap(lock Protolock) lockNamesMap {
+	servicesRPCsMap := make(lockNamesMap)
+	for _, def := range lock.Definitions {
+		if servicesRPCsMap[def.Filepath] == nil {
+			servicesRPCsMap[def.Filepath] = make(map[string]map[string]int)
+		}
+		for _, svc := range def.Def.Services {
+			if servicesRPCsMap[def.Filepath][svc.Name] == nil {
+				servicesRPCsMap[def.Filepath][svc.Name] = make(map[string]int)
+			}
+			for _, rpc := range svc.RPCs {
+				servicesRPCsMap[def.Filepath][svc.Name][rpc.Name]++
+			}
+		}
+	}
+
+	return servicesRPCsMap
 }
 
 func beginRuleDebug(name string) {

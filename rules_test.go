@@ -230,10 +230,62 @@ service ChannelChanger {
 }
 `
 
+const noRemovingServicesRPCsProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+}
+
+message NextRequest {}
+message PreviousRequest {}
+
+service ChannelChanger {
+  rpc Next(stream NextRequest) returns (Channel);
+  rpc Previous(PreviousRequest) returns (stream Channel);
+}
+`
+
+const removingServicesRPCsProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+}
+
+message NextRequest {}
+message PreviousRequest {}
+
+service ChannelChanger {
+}
+`
+
 func TestParseOnReader(t *testing.T) {
 	r := strings.NewReader(simpleProto)
 	_, err := parse(r)
 	assert.NoError(t, err)
+}
+
+func TestRemovingServiceRPCs(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noRemovingServicesRPCsProto)
+	updLock := parseTestProto(t, removingServicesRPCsProto)
+
+	warnings, ok := NoRemovingRPCs(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 2)
+
+	warnings, ok = NoRemovingRPCs(updLock, updLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
 }
 
 func TestChangingFieldNames(t *testing.T) {
