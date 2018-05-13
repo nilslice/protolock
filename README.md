@@ -84,7 +84,7 @@ warnings if any message's previous fields have been renamed.
 #### No Removing Fields Without Reserve
 Compares the current vs. updated Protolock definitions and will return a list of 
 warnings if any field has been removed without a corresponding reservation of 
-that field or name.
+that field name or ID.
 
 #### No Removing RPCs
 Compares the current vs. updated Protolock definitions and will return a list of 

@@ -423,7 +423,7 @@ func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
 
 // NoRemovingFieldsWithoutReserve compares the current vs. updated Protolock
 // definitions and will return a list of warnings if any field has been removed
-// without a corresponding reservation of that field or name.
+// without a corresponding reservation of that field name or ID.
 func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 	if debug {
 		beginRuleDebug("NoRemovingFieldsWithoutReserve")
