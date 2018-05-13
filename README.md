@@ -98,6 +98,15 @@ warnings if any RPC signature has been changed while using the same name.
 
 ---
 
+## Contributing
+Please feel free to make pull requests with better support for various rules, 
+optimized code and overall tests. Filing an issue when you encounter a bug or
+any unexpected behavior is very much appreciated. 
+
+For current issues, see: [open issues](https://github.com/nilslice/protolock/issues)
+
+---
+
 ## Acknowledgement
 
 Thank you to Ernest Micklei for his work on the excellent parser heavily relied upon by this tool and many more: [https://github.com/emicklei/proto](https://github.com/emicklei/proto)
