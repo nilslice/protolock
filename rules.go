@@ -450,7 +450,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 					resIDsMap, resNamesMap := getReservedFields(upd)
 					if _, ok := resNamesMap[path][msgName][field.Name]; !ok {
 						msg := fmt.Sprintf(
-							`"%s" field: "%s" has been removed, but is not "reserved"`,
+							`"%s" field: "%s" has been removed, but is not reserved`,
 							msgName, field.Name,
 						)
 						warnings = append(warnings, Warning{
@@ -467,7 +467,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 
 					if _, ok := resIDsMap[path][msgName][field.ID]; !ok {
 						msg := fmt.Sprintf(
-							`"%s" ID: "%d" has been removed, but is not "reserved"`,
+							`"%s" ID: "%d" has been removed, but is not reserved`,
 							msgName, field.ID,
 						)
 						warnings = append(warnings, Warning{
