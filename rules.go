@@ -431,12 +431,16 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 
 	var warnings []Warning
 	// check that if a field name from the current Protolock is not retained
-	// in the updated Protolock, then the field's name and ID shoule become
+	// in the updated Protolock, then the field's name and ID should become
 	// reserved within the parent message
 	curFieldMap := getFieldMap(cur)
 	updFieldMap := getFieldMap(upd)
 	for path, msgMap := range curFieldMap {
 		for msgName, fieldMap := range msgMap {
+			encounteredIDs := make(map[int]int)
+			for _, field := range updFieldMap[path][msgName] {
+				encounteredIDs[field.ID]++
+			}
 			for fieldName, field := range fieldMap {
 				_, ok := updFieldMap[path][msgName][fieldName]
 				if !ok {
@@ -444,20 +448,27 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 					// both in the reserved fields for this
 					// message
 					resIDsMap, resNamesMap := getReservedFields(upd)
-					if _, ok := resIDsMap[path][msgName][field.ID]; !ok {
+					if _, ok := resNamesMap[path][msgName][field.Name]; !ok {
 						msg := fmt.Sprintf(
-							`"%s" ID: "%d" has been removed, but is not "reserved"`,
-							msgName, field.ID,
+							`"%s" field: "%s" has been removed, but is not "reserved"`,
+							msgName, field.Name,
 						)
 						warnings = append(warnings, Warning{
 							Filepath: path,
 							Message:  msg,
 						})
 					}
-					if _, ok := resNamesMap[path][msgName][field.Name]; !ok {
+
+					// check that the ID for this missing field is being re-used
+					// in which case will be caught by NoChangingFieldNames
+					if _, ok := encounteredIDs[field.ID]; ok {
+						continue
+					}
+
+					if _, ok := resIDsMap[path][msgName][field.ID]; !ok {
 						msg := fmt.Sprintf(
-							`"%s" field: "%s" has been removed, but is not "reserved"`,
-							msgName, field.Name,
+							`"%s" ID: "%d" has been removed, but is not "reserved"`,
+							msgName, field.ID,
 						)
 						warnings = append(warnings, Warning{
 							Filepath: path,
