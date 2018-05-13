@@ -389,7 +389,7 @@ func TestChangingFieldNames(t *testing.T) {
 
 	warnings, ok := NoChangingFieldNames(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 1)
+	assert.Len(t, warnings, 4)
 
 	warnings, ok = NoChangingFieldNames(updLock, updLock)
 	assert.True(t, ok)
