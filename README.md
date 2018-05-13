@@ -11,6 +11,13 @@ Ever _accidentally_ break your API compatibility while you're busy fixing proble
 
 `protolock` attempts to help prevent this from happening.
 
+## Install
+If you have [Go](https://golang.org) installed, you can install `protolock` by
+running:
+```bash
+go get -u github.com/nilslice/protolock/...
+```
+
 ## Usage
 ```bash
 protolock <command> [options]
