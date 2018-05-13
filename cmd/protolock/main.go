@@ -9,7 +9,7 @@ import (
 	"github.com/nilslice/protolock"
 )
 
-const usage = `Track your .proto files and prevent incompatible changes to field names and numbers.
+const usage = `Track your .proto files and prevent changes to messages and services which impact API compatibilty.
 
 Copyright: Steve Manuel <nilslice@gmail.com>
 Released under the BSD-3-Clause license.
