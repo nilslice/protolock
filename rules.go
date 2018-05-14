@@ -128,7 +128,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, id,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: path,
+						Filepath: osPath(path),
 						Message:  msg,
 					})
 				}
@@ -147,7 +147,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, name,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: path,
+						Filepath: osPath(path),
 						Message:  msg,
 					})
 				}
@@ -192,7 +192,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, id,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: path,
+						Filepath: osPath(path),
 						Message:  msg,
 					})
 				}
@@ -208,7 +208,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, name,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: path,
+						Filepath: osPath(path),
 						Message:  msg,
 					})
 				}
@@ -402,7 +402,7 @@ func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: path,
+						Filepath: osPath(path),
 						Message:  msg,
 					})
 				}
@@ -520,7 +520,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.InStreamed,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: path,
+						Filepath: osPath(path),
 						Message:  msg,
 					})
 				}
@@ -531,7 +531,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.OutStreamed,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: path,
+						Filepath: osPath(path),
 						Message:  msg,
 					})
 				}
@@ -542,7 +542,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.InType,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: path,
+						Filepath: osPath(path),
 						Message:  msg,
 					})
 				}
@@ -553,7 +553,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.OutType,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: path,
+						Filepath: osPath(path),
 						Message:  msg,
 					})
 				}
