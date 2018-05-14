@@ -20,8 +20,8 @@ type Protolock struct {
 }
 
 type Definition struct {
-	Filepath string `json:"filepath,omitempty"`
-	Def      Entry  `json:"def,omitempty"`
+	Filepath protopath `json:"protopath,omitempty"`
+	Def      Entry     `json:"def,omitempty"`
 }
 
 type Entry struct {
@@ -30,11 +30,11 @@ type Entry struct {
 }
 
 type Message struct {
-	Name          string   `json:"name,omitempty"`
-	Fields        []Field  `json:"fields,omitempty"`
-	ReservedIDs   []int    `json:"reserved_ids,omitempty"`
-	ReservedNames []string `json:"reserved_names,omitempty"`
-	Filepath      string   `json:"filepath,omitempty"`
+	Name          string    `json:"name,omitempty"`
+	Fields        []Field   `json:"fields,omitempty"`
+	ReservedIDs   []int     `json:"reserved_ids,omitempty"`
+	ReservedNames []string  `json:"reserved_names,omitempty"`
+	Filepath      protopath `json:"filepath,omitempty"`
 }
 
 type Field struct {
@@ -45,9 +45,9 @@ type Field struct {
 }
 
 type Service struct {
-	Name     string `json:"name,omitempty"`
-	RPCs     []RPC  `json:"rpcs,omitempty"`
-	Filepath string `json:"filepath,omitempty"`
+	Name     string    `json:"name,omitempty"`
+	RPCs     []RPC     `json:"rpcs,omitempty"`
+	Filepath protopath `json:"filepath,omitempty"`
 }
 
 type RPC struct {
@@ -63,7 +63,7 @@ type Report struct {
 }
 
 type Warning struct {
-	Filepath string
+	Filepath protopath
 	Message  string
 }
 
@@ -208,7 +208,7 @@ func compare(current, update Protolock) (Report, error) {
 func getUpdatedLock() (*Protolock, error) {
 	// files is a map of filepaths to string buffers to be joined into the
 	// proto.lock file.
-	files := make(map[string]Entry)
+	files := make(map[protopath]Entry)
 
 	root, err := os.Getwd()
 	if err != nil {
@@ -242,7 +242,7 @@ func getUpdatedLock() (*Protolock, error) {
 
 		localPath := strings.TrimPrefix(path, root)
 		localPath = strings.TrimPrefix(localPath, string(filepath.Separator))
-		files[localPath] = entry
+		files[protoPath(protopath(localPath))] = entry
 		return nil
 	})
 	if err != nil {
@@ -255,7 +255,7 @@ func getUpdatedLock() (*Protolock, error) {
 	var updated Protolock
 	for fp, def := range files {
 		updated.Definitions = append(updated.Definitions, Definition{
-			Filepath: fp,
+			Filepath: protopath(fp),
 			Def:      def,
 		})
 	}

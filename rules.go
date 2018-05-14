@@ -49,7 +49,7 @@ type RuleFunc func(current, updated Protolock) ([]Warning, bool)
 				       [2] -> 1
 				       [3] -> 1
 */
-type lockIDsMap map[string]map[string]map[int]int
+type lockIDsMap map[protopath]map[string]map[int]int
 
 // lockNamesMap:
 // table of filepath -> message name -> field name -> times name encountered (or the field ID)
@@ -68,19 +68,19 @@ type lockIDsMap map[string]map[string]map[int]int
 						-> 	["field_two"] 	-> 	2
 						-> 	["field_three"] -> 	3
 */
-type lockNamesMap map[string]map[string]map[string]int
+type lockNamesMap map[protopath]map[string]map[string]int
 
 // lockFieldMap:
 // table of filepath -> message name -> field name -> field type
-type lockFieldMap map[string]map[string]map[string]Field
+type lockFieldMap map[protopath]map[string]map[string]Field
 
 // lockRPCMap:
 // table of filepath -> service name -> rpc name -> rpc type
-type lockRPCMap map[string]map[string]map[string]RPC
+type lockRPCMap map[protopath]map[string]map[string]RPC
 
 // lockFieldIDNameMap:
 // table of filepath -> message name -> field ID -> field name
-type lockFieldIDNameMap map[string]map[string]map[int]string
+type lockFieldIDNameMap map[protopath]map[string]map[int]string
 
 // NoUsingReservedFields compares the current vs. updated Protolock definitions
 // and will return a list of warnings if any message's previously reserved fields
@@ -251,7 +251,7 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updFieldID, fieldID,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: path,
+							Filepath: osPath(path),
 							Message:  msg,
 						})
 					}
@@ -294,7 +294,7 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updField.Type, field.Type,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: path,
+							Filepath: osPath(path),
 							Message:  msg,
 						})
 					}
@@ -305,7 +305,7 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updField.IsRepeated, field.IsRepeated,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: path,
+							Filepath: osPath(path),
 							Message:  msg,
 						})
 					}
@@ -354,7 +354,7 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 							msgName, updFieldName, fieldID, fieldName,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: path,
+							Filepath: osPath(path),
 							Message:  msg,
 						})
 					}
@@ -454,7 +454,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 							msgName, field.Name,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: path,
+							Filepath: osPath(path),
 							Message:  msg,
 						})
 					}
@@ -471,7 +471,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 							msgName, field.ID,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: path,
+							Filepath: osPath(path),
 							Message:  msg,
 						})
 					}
