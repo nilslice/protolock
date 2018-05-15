@@ -100,11 +100,7 @@ func parseNestedMessages(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap,
 	}
 
 	for _, m := range msg.Messages {
-<<<<<<< HEAD
-		parseNestedMessages(reservedIDMap, reservedNameMap, filepath, name+"_", m)
-=======
 		parseNestedMessages(reservedIDMap, reservedNameMap, filepath, name+nestedPrefix, m)
->>>>>>> 65782b9... fix conflict when using nested messages  (#18)
 	}
 }
 
@@ -605,12 +601,8 @@ func getReservedFieldsRecursive(reservedIDMap lockIDsMap, reservedNameMap lockNa
 	}
 
 	for _, msg := range msg.Messages {
-<<<<<<< HEAD
-		getReservedFieldsRecursive(reservedIDMap, reservedNameMap, filepath, msgName+"_", msg)
-=======
 		// recursively call func, using parent message name and a '.' as prefix
 		getReservedFieldsRecursive(reservedIDMap, reservedNameMap, filepath, msgName+nestedPrefix, msg)
->>>>>>> 65782b9... fix conflict when using nested messages  (#18)
 	}
 }
 
