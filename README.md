@@ -18,6 +18,8 @@ running:
 go get -u github.com/nilslice/protolock/...
 ```
 
+Otherwise, download a pre-built binary for Windows, macOS, or Linux from the [latest release](https://github.com/nilslice/protolock/releases/latest) page.
+
 ## Usage
 ```bash
 protolock <command> [options]
