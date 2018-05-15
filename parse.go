@@ -35,6 +35,7 @@ type Message struct {
 	ReservedIDs   []int     `json:"reserved_ids,omitempty"`
 	ReservedNames []string  `json:"reserved_names,omitempty"`
 	Filepath      protopath `json:"filepath,omitempty"`
+	Messages      []Message `json:"messages,omitempty"`
 }
 
 type Field struct {
@@ -135,11 +136,15 @@ func withMessage(m *proto.Message) {
 		}
 	}
 
-	// bail if we are a nested message, accounted for in another invocation
-	if _, ok := m.Parent.(*proto.Message); ok {
+	if _, ok := m.Parent.(*proto.Proto); !ok {
 		return
 	}
 
+	msg := parseMessage(m)
+	msgs = append(msgs, msg)
+}
+
+func parseMessage(m *proto.Message) Message {
 	msg := Message{
 		Name: m.Name,
 	}
@@ -173,9 +178,13 @@ func withMessage(m *proto.Message) {
 			// add all reserved field names
 			msg.ReservedNames = append(msg.ReservedNames, r.FieldNames...)
 		}
+
+		if m, ok := v.(*proto.Message); ok {
+			msg.Messages = append(msg.Messages, parseMessage(m))
+		}
 	}
 
-	msgs = append(msgs, msg)
+	return msg
 }
 
 // openLockFile opens and returns the lock file on disk for reading.
