@@ -584,22 +584,22 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 }
 
 func getReservedFieldsRecursive(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath protopath, prefix string, msg Message) {
-	name := prefix + msg.Name
+	msgName := prefix + msg.Name
 	for _, id := range msg.ReservedIDs {
-		if reservedIDMap[filepath][name] == nil {
-			reservedIDMap[filepath][name] = make(map[int]int)
+		if reservedIDMap[filepath][msgName] == nil {
+			reservedIDMap[filepath][msgName] = make(map[int]int)
 		}
-		reservedIDMap[filepath][name][id]++
+		reservedIDMap[filepath][msgName][id]++
 	}
 	for _, name := range msg.ReservedNames {
-		if reservedNameMap[filepath][name] == nil {
-			reservedNameMap[filepath][name] = make(map[string]int)
+		if reservedNameMap[filepath][msgName] == nil {
+			reservedNameMap[filepath][msgName] = make(map[string]int)
 		}
-		reservedNameMap[filepath][name][name]++
+		reservedNameMap[filepath][msgName][name]++
 	}
 
 	for _, msg := range msg.Messages {
-		getReservedFieldsRecursive(reservedIDMap, reservedNameMap, filepath, name+"_", msg)
+		getReservedFieldsRecursive(reservedIDMap, reservedNameMap, filepath, msgName+"_", msg)
 	}
 }
 
