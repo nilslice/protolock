@@ -353,6 +353,52 @@ service ChannelChanger {
 }
 `
 
+const noConflictSameNameNestedMessages = `syntax = "proto3";
+package main;
+
+message A {
+    message I {
+        int32 index = 1;
+    }
+
+    string id = 1;
+    I i = 2;
+}
+
+message B {
+    message I {
+        reserved 2;
+        int32 index = 1;
+    }
+
+    string id = 1;
+    I i = 2;
+}
+`
+
+const shouldConflictNestedMessage = `syntax = "proto3";
+package main;
+
+message A {
+    message I {
+        int32 index = 1;
+    }
+
+    string id = 1;
+    I i = 2;
+}
+
+message B {
+    message I {
+        int32 index = 1;
+        string name = 2;
+    }
+
+    string id = 1;
+    I i = 2;
+}
+`
+
 func TestParseOnReader(t *testing.T) {
 	r := strings.NewReader(simpleProto)
 	_, err := parse(r)
@@ -469,6 +515,25 @@ func TestRemovingFieldsWithoutReserve(t *testing.T) {
 	warnings, ok = NoRemovingFieldsWithoutReserve(updLock, updLock)
 	assert.True(t, ok)
 	assert.Len(t, warnings, 0)
+}
+
+func TestNoConflictSameNameNestedMessages(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noConflictSameNameNestedMessages)
+
+	warnings, ok := NoUsingReservedFields(curLock, curLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
+}
+
+func TestShouldConflictReusingFieldsNestedMessages(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noConflictSameNameNestedMessages)
+	updLock := parseTestProto(t, shouldConflictNestedMessage)
+
+	warnings, ok := NoUsingReservedFields(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 1)
 }
 
 func parseTestProto(t *testing.T, proto string) Protolock {
