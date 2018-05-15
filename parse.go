@@ -95,6 +95,11 @@ func parse(r io.Reader) (Entry, error) {
 }
 
 func withService(s *proto.Service) {
+	err := checkComments(s)
+	if err == ErrSkipEntry {
+		return
+	}
+
 	svc := Service{
 		Name: s.Name,
 	}
@@ -115,9 +120,15 @@ func withService(s *proto.Service) {
 }
 
 func withMessage(m *proto.Message) {
+	err := checkComments(m)
+	if err == ErrSkipEntry {
+		return
+	}
+
 	msg := Message{
 		Name: m.Name,
 	}
+
 	for _, v := range m.Elements {
 		if f, ok := v.(*proto.NormalField); ok {
 			msg.Fields = append(msg.Fields, Field{
