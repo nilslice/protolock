@@ -8,6 +8,12 @@ message Channel {
   string description = 3;
   string foo = 4;
   int32 age = 5;
+
+  message A {
+    int32 id = 1;
+  }
+
+  A msg = 44;
 }
 
 // @protolock:skip

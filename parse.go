@@ -135,11 +135,17 @@ func withMessage(m *proto.Message) {
 		}
 	}
 
+	// bail if we are a nested message, accounted for in another invocation
+	if _, ok := m.Parent.(*proto.Message); ok {
+		return
+	}
+
 	msg := Message{
 		Name: m.Name,
 	}
 
 	for _, v := range m.Elements {
+
 		if f, ok := v.(*proto.NormalField); ok {
 			msg.Fields = append(msg.Fields, Field{
 				ID:         f.Sequence,
@@ -149,9 +155,9 @@ func withMessage(m *proto.Message) {
 			})
 		}
 
-		if f, ok := v.(*proto.Reserved); ok {
+		if r, ok := v.(*proto.Reserved); ok {
 			// collect all reserved field IDs from the ranges
-			for _, rng := range f.Ranges {
+			for _, rng := range r.Ranges {
 				// if range is only a single value, skip loop and
 				// append single value to message's reserved slice
 				if rng.From == rng.To {
@@ -164,8 +170,8 @@ func withMessage(m *proto.Message) {
 				}
 			}
 
-			// find all reserved field names
-			msg.ReservedNames = append(msg.ReservedNames, f.FieldNames...)
+			// add all reserved field names
+			msg.ReservedNames = append(msg.ReservedNames, r.FieldNames...)
 		}
 	}
 

@@ -54,6 +54,11 @@ message Channel {
   string description = 3;
   string foo = 4;
   bool bar = 5;
+
+  message A {
+    int32 id = 1;
+    string name = 2;
+  }
 }
 
 message NextRequest {}
