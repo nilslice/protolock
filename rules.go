@@ -124,7 +124,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 			for id, count := range mm {
 				if count > 1 {
 					msg := fmt.Sprintf(
-						`"%s" is re-using ID: %d, a reserved field`,
+						`"%s" is re-using ID: %d, a reserved field number`,
 						msgName, id,
 					)
 					warnings = append(warnings, Warning{
@@ -143,7 +143,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 			for name, count := range mm {
 				if count > 1 {
 					msg := fmt.Sprintf(
-						`"%s" is re-using name: "%s", a reserved field`,
+						`"%s" is re-using name: "%s", a reserved field name`,
 						msgName, name,
 					)
 					warnings = append(warnings, Warning{
