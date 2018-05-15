@@ -1,6 +1,8 @@
 package protolock
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var (
 	// ruleFuncs provides a complete list of all funcs to be run to compare
@@ -20,6 +22,8 @@ var (
 	strict = true
 	debug  = false
 )
+
+const nestedPrefix = "."
 
 // SetStrict enables the user to toggle strict mode on and off.
 func SetStrict(mode bool) {
@@ -82,6 +86,24 @@ type lockRPCMap map[protopath]map[string]map[string]RPC
 // table of filepath -> message name -> field ID -> field name
 type lockFieldIDNameMap map[protopath]map[string]map[int]string
 
+func parseNestedMessages(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath protopath, prefix string, msg Message) {
+	name := prefix + msg.Name
+	for _, field := range msg.Fields {
+		if reservedIDMap[filepath][name] == nil {
+			reservedIDMap[filepath][name] = make(map[int]int)
+		}
+		if reservedNameMap[filepath][name] == nil {
+			reservedNameMap[filepath][name] = make(map[string]int)
+		}
+		reservedIDMap[filepath][name][field.ID]++
+		reservedNameMap[filepath][name][field.Name]++
+	}
+
+	for _, m := range msg.Messages {
+		parseNestedMessages(reservedIDMap, reservedNameMap, filepath, name+nestedPrefix, m)
+	}
+}
+
 // NoUsingReservedFields compares the current vs. updated Protolock definitions
 // and will return a list of warnings if any message's previously reserved fields
 // or IDs are now being used as part of the same message.
@@ -102,16 +124,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 			reservedNameMap[def.Filepath] = make(map[string]map[string]int)
 		}
 		for _, msg := range def.Def.Messages {
-			for _, field := range msg.Fields {
-				if reservedIDMap[def.Filepath][msg.Name] == nil {
-					reservedIDMap[def.Filepath][msg.Name] = make(map[int]int)
-				}
-				if reservedNameMap[def.Filepath][msg.Name] == nil {
-					reservedNameMap[def.Filepath][msg.Name] = make(map[string]int)
-				}
-				reservedIDMap[def.Filepath][msg.Name][field.ID]++
-				reservedNameMap[def.Filepath][msg.Name][field.Name]++
-			}
+			parseNestedMessages(reservedIDMap, reservedNameMap, def.Filepath, "", msg)
 		}
 	}
 
@@ -572,6 +585,27 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 	return nil, true
 }
 
+func getReservedFieldsRecursive(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath protopath, prefix string, msg Message) {
+	msgName := prefix + msg.Name
+	for _, id := range msg.ReservedIDs {
+		if reservedIDMap[filepath][msgName] == nil {
+			reservedIDMap[filepath][msgName] = make(map[int]int)
+		}
+		reservedIDMap[filepath][msgName][id]++
+	}
+	for _, name := range msg.ReservedNames {
+		if reservedNameMap[filepath][msgName] == nil {
+			reservedNameMap[filepath][msgName] = make(map[string]int)
+		}
+		reservedNameMap[filepath][msgName][name]++
+	}
+
+	for _, msg := range msg.Messages {
+		// recursively call func, using parent message name and a '.' as prefix
+		getReservedFieldsRecursive(reservedIDMap, reservedNameMap, filepath, msgName+nestedPrefix, msg)
+	}
+}
+
 // getReservedFields gets all the reserved field numbers and names, and stashes
 // them in a lockIDsMap and lockNamesMap to be checked against.
 func getReservedFields(lock Protolock) (lockIDsMap, lockNamesMap) {
@@ -585,19 +619,9 @@ func getReservedFields(lock Protolock) (lockIDsMap, lockNamesMap) {
 		if reservedNameMap[def.Filepath] == nil {
 			reservedNameMap[def.Filepath] = make(map[string]map[string]int)
 		}
+
 		for _, msg := range def.Def.Messages {
-			for _, id := range msg.ReservedIDs {
-				if reservedIDMap[def.Filepath][msg.Name] == nil {
-					reservedIDMap[def.Filepath][msg.Name] = make(map[int]int)
-				}
-				reservedIDMap[def.Filepath][msg.Name][id]++
-			}
-			for _, name := range msg.ReservedNames {
-				if reservedNameMap[def.Filepath][msg.Name] == nil {
-					reservedNameMap[def.Filepath][msg.Name] = make(map[string]int)
-				}
-				reservedNameMap[def.Filepath][msg.Name][name]++
-			}
+			getReservedFieldsRecursive(reservedIDMap, reservedNameMap, def.Filepath, "", msg)
 		}
 	}
 
