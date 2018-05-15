@@ -95,9 +95,14 @@ func parse(r io.Reader) (Entry, error) {
 }
 
 func withService(s *proto.Service) {
-	err := checkComments(s)
-	if err == ErrSkipEntry {
-		return
+	errs := checkComments(s)
+	if errs != nil {
+		for _, err := range errs {
+			switch err {
+			case ErrSkipEntry:
+				return
+			}
+		}
 	}
 
 	svc := Service{
@@ -120,9 +125,14 @@ func withService(s *proto.Service) {
 }
 
 func withMessage(m *proto.Message) {
-	err := checkComments(m)
-	if err == ErrSkipEntry {
-		return
+	errs := checkComments(m)
+	if errs != nil {
+		for _, err := range errs {
+			switch err {
+			case ErrSkipEntry:
+				return
+			}
+		}
 	}
 
 	msg := Message{

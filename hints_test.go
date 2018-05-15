@@ -25,6 +25,7 @@ message PreviousRequest {}
 
 // @protolock:skip
 // @protolock:no-impl <- not a real hint, should pick up skip for ChannelChanger
+// @protolock:internal <- real internal hint, for testing
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
   rpc Previous(PreviousRequest) returns (stream Channel);
@@ -32,6 +33,7 @@ service ChannelChanger {
 `
 
 func TestHints(t *testing.T) {
+	SetDebug(true)
 	lock := parseTestProto(t, hintSkip)
 
 	for _, def := range lock.Definitions {
