@@ -23,6 +23,8 @@ var (
 	debug  = false
 )
 
+const nestedPrefix = "."
+
 // SetStrict enables the user to toggle strict mode on and off.
 func SetStrict(mode bool) {
 	strict = mode
@@ -98,7 +100,7 @@ func parseNestedMessages(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap,
 	}
 
 	for _, m := range msg.Messages {
-		parseNestedMessages(reservedIDMap, reservedNameMap, filepath, name+"_", m)
+		parseNestedMessages(reservedIDMap, reservedNameMap, filepath, name+nestedPrefix, m)
 	}
 }
 
@@ -599,7 +601,8 @@ func getReservedFieldsRecursive(reservedIDMap lockIDsMap, reservedNameMap lockNa
 	}
 
 	for _, msg := range msg.Messages {
-		getReservedFieldsRecursive(reservedIDMap, reservedNameMap, filepath, msgName+"_", msg)
+		// recursively call func, using parent message name and a '.' as prefix
+		getReservedFieldsRecursive(reservedIDMap, reservedNameMap, filepath, msgName+nestedPrefix, msg)
 	}
 }
 
