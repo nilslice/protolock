@@ -190,7 +190,13 @@ message NextRequest {
   string name = 1;
   map<string, int32> a_map = 3;
 }
-message PreviousRequest {}
+
+message PreviousRequest {
+  oneof test_oneof {
+    int64 id = 1;
+    bool is_active = 2;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -213,7 +219,13 @@ message NextRequest {
   string name = 1;
   map<int64, bool> a_map = 3;
 }
-message PreviousRequest {}
+
+message PreviousRequest {
+  oneof test_oneof {
+    int32 id = 1;
+    bool is_active = 2;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -496,6 +508,20 @@ func TestChangingFieldNames(t *testing.T) {
 	assert.Len(t, warnings, 0)
 }
 
+func TestChangingFieldTypes(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noChangingFieldTypesProto)
+	updLock := parseTestProto(t, changingFieldTypesProto)
+
+	warnings, ok := NoChangingFieldTypes(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 6)
+
+	warnings, ok = NoChangingFieldTypes(updLock, updLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
+}
+
 func TestUsingReservedFields(t *testing.T) {
 	SetDebug(true)
 	curLock := parseTestProto(t, noUsingReservedFieldsProto)
@@ -506,20 +532,6 @@ func TestUsingReservedFields(t *testing.T) {
 	assert.Len(t, warnings, 5)
 
 	warnings, ok = NoUsingReservedFields(updLock, updLock)
-	assert.True(t, ok)
-	assert.Len(t, warnings, 0)
-}
-
-func TestChangingFieldTypes(t *testing.T) {
-	SetDebug(true)
-	curLock := parseTestProto(t, noChangingFieldTypesProto)
-	updLock := parseTestProto(t, changingFieldTypesProto)
-
-	warnings, ok := NoChangingFieldTypes(curLock, updLock)
-	assert.False(t, ok)
-	assert.Len(t, warnings, 5)
-
-	warnings, ok = NoChangingFieldTypes(updLock, updLock)
 	assert.True(t, ok)
 	assert.Len(t, warnings, 0)
 }
