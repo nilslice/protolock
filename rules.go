@@ -78,6 +78,10 @@ type lockNamesMap map[protopath]map[string]map[string]int
 // table of filepath -> message name -> field name -> field type
 type lockFieldMap map[protopath]map[string]map[string]Field
 
+// lockMapMap:
+// table of filepath -> message name -> Map name -> Map type
+type lockMapMap map[protopath]map[string]map[string]Map
+
 // lockRPCMap:
 // table of filepath -> service name -> rpc name -> rpc type
 type lockRPCMap map[protopath]map[string]map[string]RPC
@@ -303,6 +307,8 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 
 	curFieldMap := getFieldMap(cur)
 	updFieldMap := getFieldMap(upd)
+	curMapMap := getMapMap(cur)
+	updMapMap := getMapMap(upd)
 	var warnings []Warning
 	// check that the current Protolock message's field types are the same
 	// for each of the same message's fields in the updated Protolock
@@ -326,6 +332,28 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 						msg := fmt.Sprintf(
 							`"%s" field: "%s" has a different "repeated" status: %t, previously %t`,
 							msgName, fieldName, updField.IsRepeated, field.IsRepeated,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: osPath(path),
+							Message:  msg,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// check that the current Protolock message's map types are the same
+	// for each of the same message's maps in the updated Protolock
+	for path, msgMap := range curMapMap {
+		for msgName, mapMap := range msgMap {
+			for fieldName, mp := range mapMap {
+				updMap, ok := updMapMap[path][msgName][fieldName]
+				if ok {
+					if updMap.KeyType != mp.KeyType {
+						msg := fmt.Sprintf(
+							`"%s" field: "%s" has a different type: %s, previously %s`,
+							msgName, fieldName, updMap.KeyType, mp.KeyType,
 						)
 						warnings = append(warnings, Warning{
 							Filepath: osPath(path),
@@ -693,6 +721,28 @@ func getNonReservedFields(lock Protolock) lockNamesMap {
 	}
 
 	return nameIDMap
+}
+
+// getMapMap gets all the map names and types, and stashes them in a
+// lockMapMap to be checked against.
+func getMapMap(lock Protolock) lockMapMap {
+	nameTypeMap := make(lockMapMap)
+
+	for _, def := range lock.Definitions {
+		if nameTypeMap[def.Filepath] == nil {
+			nameTypeMap[def.Filepath] = make(map[string]map[string]Map)
+		}
+		for _, msg := range def.Def.Messages {
+			for _, mp := range msg.Maps {
+				if nameTypeMap[def.Filepath][msg.Name] == nil {
+					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Map)
+				}
+				nameTypeMap[def.Filepath][msg.Name][mp.Field.Name] = mp
+			}
+		}
+	}
+
+	return nameTypeMap
 }
 
 // getFieldMap gets all the field names and types, and stashes them in a

@@ -173,7 +173,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  string name = 1;
+  map<string, int32> a_map = 3;
+}
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -193,7 +196,10 @@ message Channel {
   repeated bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  string name = 1;
+  map<int64, bool> a_map = 3;
+}
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -476,7 +482,7 @@ func TestChangingFieldTypes(t *testing.T) {
 
 	warnings, ok := NoChangingFieldTypes(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 3)
+	assert.Len(t, warnings, 5)
 
 	warnings, ok = NoChangingFieldTypes(updLock, updLock)
 	assert.True(t, ok)
