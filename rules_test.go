@@ -140,7 +140,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<string, int64> a_map = 1;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -160,7 +163,10 @@ message Channel {
   bool bar = 59;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<string, int64> a_map = 2;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -517,7 +523,7 @@ func TestChangingFieldIDs(t *testing.T) {
 
 	warnings, ok := NoChangingFieldIDs(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 2)
+	assert.Len(t, warnings, 3)
 
 	warnings, ok = NoChangingFieldIDs(updLock, updLock)
 	assert.True(t, ok)
