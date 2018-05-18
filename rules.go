@@ -822,6 +822,15 @@ func getFieldMap(lock Protolock) lockFieldMap {
 				}
 				nameTypeMap[def.Filepath][msg.Name][mp.Field.Name] = mp.Field
 			}
+			for _, oo := range msg.OneOfs {
+				if nameTypeMap[def.Filepath][msg.Name] == nil {
+					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Field)
+				}
+				for _, field := range oo.Fields {
+					name := fmt.Sprintf("%s.%s", oo.Name, field.Name)
+					nameTypeMap[def.Filepath][msg.Name][name] = field
+				}
+			}
 		}
 	}
 
