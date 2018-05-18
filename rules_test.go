@@ -36,7 +36,11 @@ message Channel {
   string description = 3;
 }
 
-message NextRequest {}
+message NextRequest {
+  reserved 3;
+  reserved "a_map";
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -61,7 +65,11 @@ message Channel {
   }
 }
 
-message NextRequest {}
+message NextRequest {
+  string name = 1;
+  map<string, int32> a_map = 3;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -83,7 +91,11 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  reserved 3;
+  reserved "a_map";
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -105,7 +117,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<string, int32> a_map = 3;  
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -125,7 +140,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<string, int64> a_map = 1;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -145,7 +163,10 @@ message Channel {
   bool bar = 59;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<string, int64> a_map = 2;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -165,7 +186,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  string name = 1;
+  map<string, int32> a_map = 3;
+}
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -185,7 +209,10 @@ message Channel {
   repeated bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  string name = 1;
+  map<int64, bool> a_map = 3;
+}
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -205,7 +232,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<string, bool> a_map = 1;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -226,7 +256,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<string, bool> b_map = 1;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -324,7 +357,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<int32, bool> a_map = 1; 
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -344,7 +380,10 @@ message Channel {
   string foo = 4;
 }
 
-message NextRequest {}
+message NextRequest {
+  reserved 1;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -440,7 +479,7 @@ func TestChangingFieldNames(t *testing.T) {
 
 	warnings, ok := NoChangingFieldNames(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 4)
+	assert.Len(t, warnings, 5)
 
 	warnings, ok = NoChangingFieldNames(updLock, updLock)
 	assert.True(t, ok)
@@ -454,7 +493,7 @@ func TestUsingReservedFields(t *testing.T) {
 
 	warnings, ok := NoUsingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 3)
+	assert.Len(t, warnings, 5)
 
 	warnings, ok = NoUsingReservedFields(updLock, updLock)
 	assert.True(t, ok)
@@ -468,7 +507,7 @@ func TestChangingFieldTypes(t *testing.T) {
 
 	warnings, ok := NoChangingFieldTypes(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 3)
+	assert.Len(t, warnings, 5)
 
 	warnings, ok = NoChangingFieldTypes(updLock, updLock)
 	assert.True(t, ok)
@@ -482,7 +521,7 @@ func TestRemovingReservedFields(t *testing.T) {
 
 	warnings, ok := NoRemovingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 5)
+	assert.Len(t, warnings, 7)
 
 	warnings, ok = NoRemovingReservedFields(updLock, updLock)
 	assert.True(t, ok)
@@ -496,7 +535,7 @@ func TestChangingFieldIDs(t *testing.T) {
 
 	warnings, ok := NoChangingFieldIDs(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 2)
+	assert.Len(t, warnings, 3)
 
 	warnings, ok = NoChangingFieldIDs(updLock, updLock)
 	assert.True(t, ok)
@@ -510,7 +549,7 @@ func TestRemovingFieldsWithoutReserve(t *testing.T) {
 
 	warnings, ok := NoRemovingFieldsWithoutReserve(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 2)
+	assert.Len(t, warnings, 3)
 
 	warnings, ok = NoRemovingFieldsWithoutReserve(updLock, updLock)
 	assert.True(t, ok)
