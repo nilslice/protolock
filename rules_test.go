@@ -236,7 +236,12 @@ message NextRequest {
   map<string, bool> a_map = 1;
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  oneof test_oneof {
+    string name = 4;
+    bool is_active = 9;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -260,7 +265,12 @@ message NextRequest {
   map<string, bool> b_map = 1;
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  oneof test_oneof {
+    string name_2 = 4;
+    bool is_active = 9;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -479,7 +489,7 @@ func TestChangingFieldNames(t *testing.T) {
 
 	warnings, ok := NoChangingFieldNames(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 5)
+	assert.Len(t, warnings, 6)
 
 	warnings, ok = NoChangingFieldNames(updLock, updLock)
 	assert.True(t, ok)

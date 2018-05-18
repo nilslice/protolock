@@ -33,10 +33,16 @@ type Message struct {
 	Name          string    `json:"name,omitempty"`
 	Fields        []Field   `json:"fields,omitempty"`
 	Maps          []Map     `json:"maps,omitempty"`
+	OneOfs        []OneOf   `json:"one_ofs,omitempty"`
 	ReservedIDs   []int     `json:"reserved_ids,omitempty"`
 	ReservedNames []string  `json:"reserved_names,omitempty"`
 	Filepath      protopath `json:"filepath,omitempty"`
 	Messages      []Message `json:"messages,omitempty"`
+}
+
+type OneOf struct {
+	Name   string  `json:"name,omitempty"`
+	Fields []Field `json:"fields,omitempty"`
 }
 
 type Map struct {
@@ -175,6 +181,24 @@ func parseMessage(m *proto.Message) Message {
 					Type:       f.Type,
 					IsRepeated: false,
 				},
+			})
+		}
+
+		if oo, ok := v.(*proto.Oneof); ok {
+			var fields []Field
+			for _, el := range oo.Elements {
+				if f, ok := el.(*proto.OneOfField); ok {
+					fields = append(fields, Field{
+						ID:         f.Sequence,
+						Name:       f.Name,
+						Type:       f.Type,
+						IsRepeated: false,
+					})
+				}
+			}
+			msg.OneOfs = append(msg.OneOfs, OneOf{
+				Name:   oo.Name,
+				Fields: fields,
 			})
 		}
 

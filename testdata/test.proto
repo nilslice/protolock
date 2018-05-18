@@ -32,7 +32,13 @@ message Display {
 
 // @protolock:skip
 message NextRequest {}
-message PreviousRequest {}
+
+message PreviousRequest {
+  oneof test_oneof {
+    string name = 4;
+    bool is_active = 9;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
