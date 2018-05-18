@@ -232,7 +232,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<string, bool> a_map = 1;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -253,7 +256,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<string, bool> b_map = 1;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -473,7 +479,7 @@ func TestChangingFieldNames(t *testing.T) {
 
 	warnings, ok := NoChangingFieldNames(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 4)
+	assert.Len(t, warnings, 5)
 
 	warnings, ok = NoChangingFieldNames(updLock, updLock)
 	assert.True(t, ok)
