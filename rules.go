@@ -98,6 +98,16 @@ func parseNestedMessages(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap,
 		reservedIDMap[filepath][name][field.ID]++
 		reservedNameMap[filepath][name][field.Name]++
 	}
+	for _, mp := range msg.Maps {
+		if reservedIDMap[filepath][name] == nil {
+			reservedIDMap[filepath][name] = make(map[int]int)
+		}
+		if reservedNameMap[filepath][name] == nil {
+			reservedNameMap[filepath][name] = make(map[string]int)
+		}
+		reservedIDMap[filepath][name][mp.Field.ID]++
+		reservedNameMap[filepath][name][mp.Field.Name]++
+	}
 
 	for _, m := range msg.Messages {
 		parseNestedMessages(reservedIDMap, reservedNameMap, filepath, name+nestedPrefix, m)
@@ -623,6 +633,7 @@ func getReservedFields(lock Protolock) (lockIDsMap, lockNamesMap) {
 		for _, msg := range def.Def.Messages {
 			getReservedFieldsRecursive(reservedIDMap, reservedNameMap, def.Filepath, "", msg)
 		}
+
 	}
 
 	return reservedIDMap, reservedNameMap
@@ -644,14 +655,20 @@ func getFieldsIDName(lock Protolock) lockFieldIDNameMap {
 				}
 				fieldIDNameMap[def.Filepath][msg.Name][field.ID] = field.Name
 			}
+			for _, mp := range msg.Maps {
+				if fieldIDNameMap[def.Filepath][msg.Name] == nil {
+					fieldIDNameMap[def.Filepath][msg.Name] = make(map[int]string)
+				}
+				fieldIDNameMap[def.Filepath][msg.Name][mp.Field.ID] = mp.Field.Name
+			}
 		}
 	}
 
 	return fieldIDNameMap
 }
 
-// getNonReservedFields gets all the reserved field numbers and names, and stashes
-// them in a lockNamesMap to be checked against.
+// getNonReservedFields gets all the non-reserved field numbers and names, and
+// stashes them in a lockNamesMap to be checked against.
 func getNonReservedFields(lock Protolock) lockNamesMap {
 	nameIDMap := make(lockNamesMap)
 
@@ -665,6 +682,12 @@ func getNonReservedFields(lock Protolock) lockNamesMap {
 					nameIDMap[def.Filepath][msg.Name] = make(map[string]int)
 				}
 				nameIDMap[def.Filepath][msg.Name][field.Name] = field.ID
+			}
+			for _, mp := range msg.Maps {
+				if nameIDMap[def.Filepath][msg.Name] == nil {
+					nameIDMap[def.Filepath][msg.Name] = make(map[string]int)
+				}
+				nameIDMap[def.Filepath][msg.Name][mp.Field.Name] = mp.Field.ID
 			}
 		}
 	}
@@ -687,6 +710,12 @@ func getFieldMap(lock Protolock) lockFieldMap {
 					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Field)
 				}
 				nameTypeMap[def.Filepath][msg.Name][field.Name] = field
+			}
+			for _, mp := range msg.Maps {
+				if nameTypeMap[def.Filepath][msg.Name] == nil {
+					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Field)
+				}
+				nameTypeMap[def.Filepath][msg.Name][mp.Field.Name] = mp.Field
 			}
 		}
 	}

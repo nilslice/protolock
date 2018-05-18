@@ -32,10 +32,16 @@ type Entry struct {
 type Message struct {
 	Name          string    `json:"name,omitempty"`
 	Fields        []Field   `json:"fields,omitempty"`
+	Maps          []Map     `json:"maps,omitempty"`
 	ReservedIDs   []int     `json:"reserved_ids,omitempty"`
 	ReservedNames []string  `json:"reserved_names,omitempty"`
 	Filepath      protopath `json:"filepath,omitempty"`
 	Messages      []Message `json:"messages,omitempty"`
+}
+
+type Map struct {
+	KeyType string `json:"key_type,omitempty"`
+	Field   Field  `json:"field,omitempty"`
 }
 
 type Field struct {
@@ -140,8 +146,7 @@ func withMessage(m *proto.Message) {
 		return
 	}
 
-	msg := parseMessage(m)
-	msgs = append(msgs, msg)
+	msgs = append(msgs, parseMessage(m))
 }
 
 func parseMessage(m *proto.Message) Message {
@@ -157,6 +162,19 @@ func parseMessage(m *proto.Message) Message {
 				Name:       f.Name,
 				Type:       f.Type,
 				IsRepeated: f.Repeated,
+			})
+		}
+
+		if mp, ok := v.(*proto.MapField); ok {
+			f := mp.Field
+			msg.Maps = append(msg.Maps, Map{
+				KeyType: mp.KeyType,
+				Field: Field{
+					ID:         f.Sequence,
+					Name:       f.Name,
+					Type:       f.Type,
+					IsRepeated: false,
+				},
 			})
 		}
 

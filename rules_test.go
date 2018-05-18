@@ -36,7 +36,11 @@ message Channel {
   string description = 3;
 }
 
-message NextRequest {}
+message NextRequest {
+  reserved 3;
+  reserved "a_map";
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -61,7 +65,11 @@ message Channel {
   }
 }
 
-message NextRequest {}
+message NextRequest {
+  string name = 1;
+  map<string, int32> a_map = 3;
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -454,7 +462,7 @@ func TestUsingReservedFields(t *testing.T) {
 
 	warnings, ok := NoUsingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 3)
+	assert.Len(t, warnings, 5)
 
 	warnings, ok = NoUsingReservedFields(updLock, updLock)
 	assert.True(t, ok)
