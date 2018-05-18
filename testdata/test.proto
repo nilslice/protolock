@@ -27,7 +27,7 @@ message Display {
 
   A msg = 44;
 
-  map<string, int32> a_map = 3;
+  map<string, int32> b_map = 4;
 }
 
 // @protolock:skip
