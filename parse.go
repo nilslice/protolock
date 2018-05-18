@@ -32,9 +32,16 @@ type Entry struct {
 type Message struct {
 	Name          string    `json:"name,omitempty"`
 	Fields        []Field   `json:"fields,omitempty"`
+	Maps          []Map     `json:"maps,omitempty"`
 	ReservedIDs   []int     `json:"reserved_ids,omitempty"`
 	ReservedNames []string  `json:"reserved_names,omitempty"`
 	Filepath      protopath `json:"filepath,omitempty"`
+	Messages      []Message `json:"messages,omitempty"`
+}
+
+type Map struct {
+	KeyType string `json:"key_type,omitempty"`
+	Field   Field  `json:"field,omitempty"`
 }
 
 type Field struct {
@@ -95,6 +102,16 @@ func parse(r io.Reader) (Entry, error) {
 }
 
 func withService(s *proto.Service) {
+	errs := checkComments(s)
+	if errs != nil {
+		for _, err := range errs {
+			switch err {
+			case ErrSkipEntry:
+				return
+			}
+		}
+	}
+
 	svc := Service{
 		Name: s.Name,
 	}
@@ -115,10 +132,30 @@ func withService(s *proto.Service) {
 }
 
 func withMessage(m *proto.Message) {
+	errs := checkComments(m)
+	if errs != nil {
+		for _, err := range errs {
+			switch err {
+			case ErrSkipEntry:
+				return
+			}
+		}
+	}
+
+	if _, ok := m.Parent.(*proto.Proto); !ok {
+		return
+	}
+
+	msgs = append(msgs, parseMessage(m))
+}
+
+func parseMessage(m *proto.Message) Message {
 	msg := Message{
 		Name: m.Name,
 	}
+
 	for _, v := range m.Elements {
+
 		if f, ok := v.(*proto.NormalField); ok {
 			msg.Fields = append(msg.Fields, Field{
 				ID:         f.Sequence,
@@ -128,9 +165,22 @@ func withMessage(m *proto.Message) {
 			})
 		}
 
-		if f, ok := v.(*proto.Reserved); ok {
+		if mp, ok := v.(*proto.MapField); ok {
+			f := mp.Field
+			msg.Maps = append(msg.Maps, Map{
+				KeyType: mp.KeyType,
+				Field: Field{
+					ID:         f.Sequence,
+					Name:       f.Name,
+					Type:       f.Type,
+					IsRepeated: false,
+				},
+			})
+		}
+
+		if r, ok := v.(*proto.Reserved); ok {
 			// collect all reserved field IDs from the ranges
-			for _, rng := range f.Ranges {
+			for _, rng := range r.Ranges {
 				// if range is only a single value, skip loop and
 				// append single value to message's reserved slice
 				if rng.From == rng.To {
@@ -143,12 +193,16 @@ func withMessage(m *proto.Message) {
 				}
 			}
 
-			// find all reserved field names
-			msg.ReservedNames = append(msg.ReservedNames, f.FieldNames...)
+			// add all reserved field names
+			msg.ReservedNames = append(msg.ReservedNames, r.FieldNames...)
+		}
+
+		if m, ok := v.(*proto.Message); ok {
+			msg.Messages = append(msg.Messages, parseMessage(m))
 		}
 	}
 
-	msgs = append(msgs, msg)
+	return msg
 }
 
 // openLockFile opens and returns the lock file on disk for reading.
