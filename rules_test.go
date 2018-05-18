@@ -91,7 +91,11 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  reserved 3;
+  reserved "a_map";
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -113,7 +117,10 @@ message Channel {
   bool bar = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+  map<string, int32> a_map = 3;  
+}
+
 message PreviousRequest {}
 
 service ChannelChanger {
@@ -496,7 +503,7 @@ func TestRemovingReservedFields(t *testing.T) {
 
 	warnings, ok := NoRemovingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 5)
+	assert.Len(t, warnings, 7)
 
 	warnings, ok = NoRemovingReservedFields(updLock, updLock)
 	assert.True(t, ok)
