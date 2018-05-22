@@ -394,8 +394,6 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 
 	curFieldMap := getFieldsIDName(cur)
 	updFieldMap := getFieldsIDName(upd)
-	updOneOfsMap := getOneOfFields(upd)
-	curOneOfsMap := getOneOfFields(cur)
 
 	var warnings []Warning
 	// check that the current Protolock messages' field names are equal to
@@ -419,27 +417,27 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 			}
 		}
 	}
-	for path, msgMap := range curOneOfsMap {
-		for msgName, ooMap := range msgMap {
-			for ooName, fieldMap := range ooMap {
-				for fieldID, fieldName := range fieldMap {
-					updOOFieldName, ok := updOneOfsMap[path][msgName][ooName][fieldID]
-					if ok {
-						if updOOFieldName != fieldName {
-							msg := fmt.Sprintf(
-								`"%s" oneof field: "%s" ID: %d has an updated name, previously "%s"`,
-								msgName, updOOFieldName, fieldID, fieldName,
-							)
-							warnings = append(warnings, Warning{
-								Filepath: osPath(path),
-								Message:  msg,
-							})
-						}
-					}
-				}
-			}
-		}
-	}
+	// for path, msgMap := range curOneOfsMap {
+	// 	for msgName, ooMap := range msgMap {
+	// 		for ooName, fieldMap := range ooMap {
+	// 			for fieldID, fieldName := range fieldMap {
+	// 				updOOFieldName, ok := updOneOfsMap[path][msgName][ooName][fieldID]
+	// 				if ok {
+	// 					if updOOFieldName != fieldName {
+	// 						msg := fmt.Sprintf(
+	// 							`"%s" oneof field: "%s" ID: %d has an updated name, previously "%s"`,
+	// 							msgName, updOOFieldName, fieldID, fieldName,
+	// 						)
+	// 						warnings = append(warnings, Warning{
+	// 							Filepath: osPath(path),
+	// 							Message:  msg,
+	// 						})
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	if debug {
 		concludeRuleDebug("NoChangingFieldNames", warnings)
@@ -722,34 +720,6 @@ func getFieldsIDName(lock Protolock) lockFieldIDNameMap {
 	return fieldIDNameMap
 }
 
-// getOneOfFields gets all the fields in a message's oneofs mapped by the field
-// ID to its name for all messages.
-func getOneOfFields(lock Protolock) lockFieldOneOfIDNameMap {
-	fieldOneOfIDNameMap := make(lockFieldOneOfIDNameMap)
-
-	for _, def := range lock.Definitions {
-		if fieldOneOfIDNameMap[def.Filepath] == nil {
-			fieldOneOfIDNameMap[def.Filepath] = make(map[string]map[string]map[int]string)
-		}
-		for _, msg := range def.Def.Messages {
-			for _, oo := range msg.OneOfs {
-				if fieldOneOfIDNameMap[def.Filepath][msg.Name] == nil {
-					fieldOneOfIDNameMap[def.Filepath][msg.Name] = make(map[string]map[int]string)
-				}
-				if fieldOneOfIDNameMap[def.Filepath][msg.Name][oo.Name] == nil {
-					fieldOneOfIDNameMap[def.Filepath][msg.Name][oo.Name] = make(map[int]string)
-				}
-
-				for _, field := range oo.Fields {
-					fieldOneOfIDNameMap[def.Filepath][msg.Name][oo.Name][field.ID] = field.Name
-				}
-			}
-		}
-	}
-
-	return fieldOneOfIDNameMap
-}
-
 // getNonReservedFields gets all the non-reserved field numbers and names, and
 // stashes them in a lockNamesMap to be checked against.
 func getNonReservedFields(lock Protolock) lockNamesMap {
@@ -821,15 +791,6 @@ func getFieldMap(lock Protolock) lockFieldMap {
 					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Field)
 				}
 				nameTypeMap[def.Filepath][msg.Name][mp.Field.Name] = mp.Field
-			}
-			for _, oo := range msg.OneOfs {
-				if nameTypeMap[def.Filepath][msg.Name] == nil {
-					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Field)
-				}
-				for _, field := range oo.Fields {
-					name := fmt.Sprintf("%s.%s", oo.Name, field.Name)
-					nameTypeMap[def.Filepath][msg.Name][name] = field
-				}
 			}
 		}
 	}

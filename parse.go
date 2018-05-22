@@ -33,16 +33,10 @@ type Message struct {
 	Name          string    `json:"name,omitempty"`
 	Fields        []Field   `json:"fields,omitempty"`
 	Maps          []Map     `json:"maps,omitempty"`
-	OneOfs        []OneOf   `json:"one_ofs,omitempty"`
 	ReservedIDs   []int     `json:"reserved_ids,omitempty"`
 	ReservedNames []string  `json:"reserved_names,omitempty"`
 	Filepath      protopath `json:"filepath,omitempty"`
 	Messages      []Message `json:"messages,omitempty"`
-}
-
-type OneOf struct {
-	Name   string  `json:"name,omitempty"`
-	Fields []Field `json:"fields,omitempty"`
 }
 
 type Map struct {
@@ -196,10 +190,7 @@ func parseMessage(m *proto.Message) Message {
 					})
 				}
 			}
-			msg.OneOfs = append(msg.OneOfs, OneOf{
-				Name:   oo.Name,
-				Fields: fields,
-			})
+			msg.Fields = append(msg.Fields, fields...)
 		}
 
 		if r, ok := v.(*proto.Reserved); ok {
