@@ -1,32 +1,40 @@
 #!/bin/bash
 
+rootDir="$(pwd)"
+pkgDir="${rootDir}/pkg"
+
 set +x
-mkdir -p builds
+rm -rf "${pkgDir}"
+mkdir -p "${pkgDir}"
 
-rm builds/*
+NOW="$(date -u +%Y%m%dT%H%M%S)"
 
-NOW=`date +%F.%s`
-BUILD_SRC=cmd/protolock/main.go
-NAME=protolock
-BUILD_CMD="go build -o $NAME $BUILD_SRC"
+function build() {
+  os=$1
+  arch=$2
 
-LINUX_TAR="protolock-$NOW-linux.tgz"
-WIN_TAR="protolock-$NOW-windows.tgz"
-MAC_TAR="protolock-$NOW-macos.tgz"
+  if [ "${os}" == 'windows' ]
+  then
+    extension='.exe'
+  fi
 
-# cross compile for linux, windows, macOS
-GOOS=linux $BUILD_CMD
-tar czf $LINUX_TAR protolock README.md LICENSE
-rm protolock
-mv $LINUX_TAR builds
+  name="protolock${extension}"
 
-GOOS=windows $BUILD_CMD 
-mv protolock protolock.exe
-tar czf $WIN_TAR  protolock.exe README.md LICENSE
-rm protolock.exe
-mv $WIN_TAR builds
+  tmpDir="${pkgDir}/tmp/${os}_${arch}"
+  mkdir -p "${tmpDir}"
+  GOOS="${os}" GOARCH="${arch}" go build -o "${tmpDir}/${name}" cmd/protolock/main.go
+  (
+    cd "${tmpDir}"
 
-GOOS=darwin $BUILD_CMD
-tar czf $MAC_TAR protolock README.md LICENSE
-rm protolock
-mv $MAC_TAR builds
+    cp -p "${rootDir}"/{LICENSE,README.md} .
+
+    distDir="${pkgDir}/distributions"
+    mkdir -p "${distDir}"
+    tar cpzf "${distDir}/protolock.${NOW}.${os}-${arch}.tgz" "${name}" LICENSE README.md
+  )
+}
+
+for os in darwin linux windows
+do
+  build "${os}" amd64
+done
