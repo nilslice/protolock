@@ -417,27 +417,6 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 			}
 		}
 	}
-	// for path, msgMap := range curOneOfsMap {
-	// 	for msgName, ooMap := range msgMap {
-	// 		for ooName, fieldMap := range ooMap {
-	// 			for fieldID, fieldName := range fieldMap {
-	// 				updOOFieldName, ok := updOneOfsMap[path][msgName][ooName][fieldID]
-	// 				if ok {
-	// 					if updOOFieldName != fieldName {
-	// 						msg := fmt.Sprintf(
-	// 							`"%s" oneof field: "%s" ID: %d has an updated name, previously "%s"`,
-	// 							msgName, updOOFieldName, fieldID, fieldName,
-	// 						)
-	// 						warnings = append(warnings, Warning{
-	// 							Filepath: osPath(path),
-	// 							Message:  msg,
-	// 						})
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	if debug {
 		concludeRuleDebug("NoChangingFieldNames", warnings)
