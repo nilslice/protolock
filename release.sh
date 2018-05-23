@@ -7,7 +7,7 @@ set +x
 rm -rf "${pkgDir}"
 mkdir -p "${pkgDir}"
 
-NOW="$(date -u +%Y%m%dT%H%M%S)"
+NOW="$(date -u +%Y%m%dT%H%M%SZ)"
 
 function build() {
   os=$1
