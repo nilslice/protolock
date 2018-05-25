@@ -82,10 +82,6 @@ type lockFieldMap map[protopath]map[string]map[string]Field
 // table of filepath -> message name -> Map name -> Map type
 type lockMapMap map[protopath]map[string]map[string]Map
 
-// lockFieldOneOfIDNameMap:
-// table of filepath -> message name -> oneof name -> field ID -> field name
-type lockFieldOneOfIDNameMap map[protopath]map[string]map[string]map[int]string
-
 // lockRPCMap:
 // table of filepath -> service name -> rpc name -> rpc type
 type lockRPCMap map[protopath]map[string]map[string]RPC
