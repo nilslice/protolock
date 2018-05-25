@@ -178,6 +178,21 @@ func parseMessage(m *proto.Message) Message {
 			})
 		}
 
+		if oo, ok := v.(*proto.Oneof); ok {
+			var fields []Field
+			for _, el := range oo.Elements {
+				if f, ok := el.(*proto.OneOfField); ok {
+					fields = append(fields, Field{
+						ID:         f.Sequence,
+						Name:       f.Name,
+						Type:       f.Type,
+						IsRepeated: false,
+					})
+				}
+			}
+			msg.Fields = append(msg.Fields, fields...)
+		}
+
 		if r, ok := v.(*proto.Reserved); ok {
 			// collect all reserved field IDs from the ranges
 			for _, rng := range r.Ranges {
