@@ -32,7 +32,7 @@ var (
 	options = flag.NewFlagSet("options", flag.ExitOnError)
 	debug   = options.Bool("debug", false, "toggle debug mode for verbose output")
 	strict  = options.Bool("strict", true, "toggle strict mode, to determine which rules are enforced")
-	ignore = options.String("ignore", "", "Comma-separated list of directories to ignore.")
+	ignore  = options.String("ignore", "", "comma-separated list of directories to ignore.")
 )
 
 func main() {
