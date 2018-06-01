@@ -41,7 +41,14 @@ message NextRequest {
   reserved "a_map";
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  reserved 4;
+  reserved "no_use";
+  oneof test_oneof {
+    int64 id = 1;
+    bool is_active = 2;
+  }
+}
 
 service ChannelChanger {
 	rpc Next(stream NextRequest) returns (Channel);
@@ -70,7 +77,14 @@ message NextRequest {
   map<string, int32> a_map = 3;
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  oneof test_oneof {
+    int64 id = 1;
+    bool is_active = 2;
+    string no_use = 3;
+    float32 thing = 4;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -96,7 +110,14 @@ message NextRequest {
   reserved "a_map";
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  reserved 4;
+  reserved "no_use";
+  oneof test_oneof {
+    int64 id = 1;
+    bool is_active = 2;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -121,7 +142,12 @@ message NextRequest {
   map<string, int32> a_map = 3;  
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  oneof test_oneof {
+    int64 id = 1;
+    bool is_active = 2;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -144,7 +170,14 @@ message NextRequest {
   map<string, int64> a_map = 1;
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  reserved 4;
+  reserved "no_use";
+  oneof test_oneof {
+    int64 id = 1;
+    bool is_active = 2;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -167,7 +200,14 @@ message NextRequest {
   map<string, int64> a_map = 2;
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  reserved 4;
+  reserved "no_use";
+  oneof test_oneof {
+    int64 id = 11;
+    bool is_active = 32;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -190,7 +230,13 @@ message NextRequest {
   string name = 1;
   map<string, int32> a_map = 3;
 }
-message PreviousRequest {}
+
+message PreviousRequest {
+  oneof test_oneof {
+    int64 id = 1;
+    bool is_active = 2;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -213,7 +259,13 @@ message NextRequest {
   string name = 1;
   map<int64, bool> a_map = 3;
 }
-message PreviousRequest {}
+
+message PreviousRequest {
+  oneof test_oneof {
+    int32 id = 1;
+    bool is_active = 2;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -236,7 +288,12 @@ message NextRequest {
   map<string, bool> a_map = 1;
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  oneof test_oneof {
+    string name = 4;
+    bool is_active = 9;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -260,7 +317,12 @@ message NextRequest {
   map<string, bool> b_map = 1;
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  oneof test_oneof {
+    string name_2 = 4;
+    bool is_active = 9;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -361,7 +423,12 @@ message NextRequest {
   map<int32, bool> a_map = 1; 
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  oneof test_oneof {
+    int64 id = 1;
+    bool is_active = 2;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -384,7 +451,9 @@ message NextRequest {
   reserved 1;
 }
 
-message PreviousRequest {}
+message PreviousRequest {
+  reserved 1;
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -479,23 +548,9 @@ func TestChangingFieldNames(t *testing.T) {
 
 	warnings, ok := NoChangingFieldNames(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 5)
+	assert.Len(t, warnings, 6)
 
 	warnings, ok = NoChangingFieldNames(updLock, updLock)
-	assert.True(t, ok)
-	assert.Len(t, warnings, 0)
-}
-
-func TestUsingReservedFields(t *testing.T) {
-	SetDebug(true)
-	curLock := parseTestProto(t, noUsingReservedFieldsProto)
-	updLock := parseTestProto(t, usingReservedFieldsProto)
-
-	warnings, ok := NoUsingReservedFields(curLock, updLock)
-	assert.False(t, ok)
-	assert.Len(t, warnings, 5)
-
-	warnings, ok = NoUsingReservedFields(updLock, updLock)
 	assert.True(t, ok)
 	assert.Len(t, warnings, 0)
 }
@@ -507,9 +562,23 @@ func TestChangingFieldTypes(t *testing.T) {
 
 	warnings, ok := NoChangingFieldTypes(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 5)
+	assert.Len(t, warnings, 6)
 
 	warnings, ok = NoChangingFieldTypes(updLock, updLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
+}
+
+func TestUsingReservedFields(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noUsingReservedFieldsProto)
+	updLock := parseTestProto(t, usingReservedFieldsProto)
+
+	warnings, ok := NoUsingReservedFields(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 7)
+
+	warnings, ok = NoUsingReservedFields(updLock, updLock)
 	assert.True(t, ok)
 	assert.Len(t, warnings, 0)
 }
@@ -521,7 +590,7 @@ func TestRemovingReservedFields(t *testing.T) {
 
 	warnings, ok := NoRemovingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 7)
+	assert.Len(t, warnings, 9)
 
 	warnings, ok = NoRemovingReservedFields(updLock, updLock)
 	assert.True(t, ok)
@@ -535,7 +604,7 @@ func TestChangingFieldIDs(t *testing.T) {
 
 	warnings, ok := NoChangingFieldIDs(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 3)
+	assert.Len(t, warnings, 5)
 
 	warnings, ok = NoChangingFieldIDs(updLock, updLock)
 	assert.True(t, ok)
@@ -549,7 +618,7 @@ func TestRemovingFieldsWithoutReserve(t *testing.T) {
 
 	warnings, ok := NoRemovingFieldsWithoutReserve(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 3)
+	assert.Len(t, warnings, 6)
 
 	warnings, ok = NoRemovingFieldsWithoutReserve(updLock, updLock)
 	assert.True(t, ok)

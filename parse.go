@@ -178,6 +178,21 @@ func parseMessage(m *proto.Message) Message {
 			})
 		}
 
+		if oo, ok := v.(*proto.Oneof); ok {
+			var fields []Field
+			for _, el := range oo.Elements {
+				if f, ok := el.(*proto.OneOfField); ok {
+					fields = append(fields, Field{
+						ID:         f.Sequence,
+						Name:       f.Name,
+						Type:       f.Type,
+						IsRepeated: false,
+					})
+				}
+			}
+			msg.Fields = append(msg.Fields, fields...)
+		}
+
 		if r, ok := v.(*proto.Reserved); ok {
 			// collect all reserved field IDs from the ranges
 			for _, rng := range r.Ranges {
@@ -276,14 +291,15 @@ func getProtoFiles(root string, ignores string) ([]string, error) {
 			return nil
 		}
 
-		// if ignore, skip
+		// skip if path is within an ignored path
 		if ignores != "" {
 			for _, ignore := range strings.Split(ignores, ",") {
-				rootIgnore := root + "/" + ignore
+				rootIgnore := filepath.Join(root, ignore)
 				stat, err := os.Stat(rootIgnore)
 				if err == nil {
-					if stat.IsDir() && !strings.HasSuffix(rootIgnore, "/") {
-						rootIgnore += "/"
+					const sep = string(filepath.Separator)
+					if stat.IsDir() && !strings.HasSuffix(rootIgnore, sep) {
+						rootIgnore += sep
 					}
 
 					if strings.HasPrefix(path, rootIgnore) {
