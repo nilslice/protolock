@@ -294,17 +294,13 @@ func getProtoFiles(root string, ignores string) ([]string, error) {
 		// skip if path is within an ignored path
 		if ignores != "" {
 			for _, ignore := range strings.Split(ignores, ",") {
-				rootIgnore := filepath.Join(root, ignore)
-				stat, err := os.Stat(rootIgnore)
-				if err == nil {
-					const sep = string(filepath.Separator)
-					if stat.IsDir() && !strings.HasSuffix(rootIgnore, sep) {
-						rootIgnore += sep
-					}
+				rel, err := filepath.Rel(filepath.Join(root, ignore), path)
+				if err != nil {
+					return nil
+				}
 
-					if strings.HasPrefix(path, rootIgnore) {
-						return nil
-					}
+				if !strings.HasPrefix(rel, "../") {
+					return nil
 				}
 			}
 		}
