@@ -32,6 +32,7 @@ var (
 	options = flag.NewFlagSet("options", flag.ExitOnError)
 	debug   = options.Bool("debug", false, "toggle debug mode for verbose output")
 	strict  = options.Bool("strict", true, "toggle strict mode, to determine which rules are enforced")
+	ignore  = options.String("ignore", "", "comma-separated list of directories to ignore.")
 )
 
 func main() {
@@ -49,8 +50,9 @@ func main() {
 	switch os.Args[1] {
 	case "-h", "--help", "help":
 		fmt.Println(usage)
+
 	case "init":
-		r, err := protolock.Init()
+		r, err := protolock.Init(*ignore)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -63,7 +65,7 @@ func main() {
 		}
 
 	case "commit":
-		r, err := protolock.Commit()
+		r, err := protolock.Commit(*ignore)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -76,7 +78,7 @@ func main() {
 		}
 
 	case "status":
-		report, err := protolock.Status()
+		report, err := protolock.Status(*ignore)
 		if err != nil {
 			if len(report.Warnings) > 0 {
 				for _, w := range report.Warnings {
