@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var gpfPath = filepath.Join("testdata", "getProtoFiles")
 
 func TestGetProtoFilesFiltersDirectories(t *testing.T) {
 	files, err := getProtoFiles(gpfPath, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	path := filepath.Join(gpfPath, "directory.proto")
 	assert.NotContains(t, files, path)
@@ -23,7 +24,7 @@ func TestGetProtoFilesFiltersDirectories(t *testing.T) {
 
 func TestGetProtoFilesFiltersNonProto(t *testing.T) {
 	files, err := getProtoFiles(gpfPath, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	path := filepath.Join(gpfPath, "directory.proto", "test.non-proto")
 	assert.NotContains(t, files, path)
@@ -34,7 +35,7 @@ func TestGetProtoFilesFiltersNonProto(t *testing.T) {
 
 func TestGetProtoFilesIgnoresDirectories(t *testing.T) {
 	files, err := getProtoFiles(gpfPath, "exclude")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	path := filepath.Join(gpfPath, "exclude", "test.proto")
 	assert.NotContains(t, files, path)
@@ -45,7 +46,7 @@ func TestGetProtoFilesIgnoresDirectories(t *testing.T) {
 
 func TestGetProtoFilesIgnoresFiles(t *testing.T) {
 	files, err := getProtoFiles(gpfPath, filepath.Join("include", "exclude.proto"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	path := filepath.Join(gpfPath, "include", "exclude.proto")
 	assert.NotContains(t, files, path)
@@ -58,7 +59,7 @@ func TestGetProtoFilesIgnoresMultiple(t *testing.T) {
 	paths := []string{"exclude", filepath.Join("include", "exclude.proto")}
 	ignores := strings.Join(paths, ",")
 	files, err := getProtoFiles(gpfPath, ignores)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	path := filepath.Join(gpfPath, "exclude", "test.proto")
 	assert.NotContains(t, files, path)
