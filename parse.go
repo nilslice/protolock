@@ -272,9 +272,56 @@ func compare(current, update Protolock) (Report, error) {
 	return Report{}, nil
 }
 
+// getProtoFiles finds recursively all .proto files to be processed.
+func getProtoFiles(root string, ignores string) ([]string, error) {
+	protoFiles := []string{}
+
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// if not a .proto file, do not attempt to parse.
+		if !strings.HasSuffix(info.Name(), protoSuffix) {
+			return nil
+		}
+
+		// skip to next if is a directory
+		if info.IsDir() {
+			return nil
+		}
+
+		// if ignore, skip
+		if ignores != "" {
+			for _, ignore := range strings.Split(ignores, ",") {
+				rootIgnore := root + "/" + ignore
+				stat, err := os.Stat(rootIgnore)
+				if err == nil {
+					if stat.IsDir() && !strings.HasSuffix(rootIgnore, "/") {
+						rootIgnore += "/"
+					}
+
+					if strings.HasPrefix(path, rootIgnore) {
+						return nil
+					}
+				}
+			}
+		}
+
+		protoFiles = append(protoFiles, path)
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return protoFiles, nil
+}
+
 // getUpdatedLock finds all .proto files recursively in tree, parse each file
 // and accumulate all definitions into an updated Protolock.
-func getUpdatedLock() (*Protolock, error) {
+func getUpdatedLock(ignores string) (*Protolock, error) {
 	// files is a map of filepaths to string buffers to be joined into the
 	// proto.lock file.
 	files := make(map[protopath]Entry)
@@ -284,38 +331,26 @@ func getUpdatedLock() (*Protolock, error) {
 		return nil, err
 	}
 
-	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
+	protoFiles, err := getProtoFiles(root, ignores)
+	if err != nil {
+		return nil, err
+	}
 
-		// if not a .proto file, do not attempt to parse.
-		if !strings.HasSuffix(info.Name(), protoSuffix) {
-			return nil
-		}
-		// skip to next if is a directory
-		if info.IsDir() {
-			return nil
-		}
-
+	for _, path := range protoFiles {
 		f, err := os.Open(path)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		defer f.Close()
 
 		entry, err := parse(f)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		localPath := strings.TrimPrefix(path, root)
 		localPath = strings.TrimPrefix(localPath, string(filepath.Separator))
 		files[protoPath(protopath(localPath))] = entry
-		return nil
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	// add all the definitions from the updated set of protos to a Protolock
