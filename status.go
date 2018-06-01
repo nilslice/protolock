@@ -7,8 +7,8 @@ import (
 
 // Status will report on any issues encountered when comparing the updated tree
 // of parsed proto files and the current proto.lock file.
-func Status() (Report, error) {
-	updated, err := getUpdatedLock()
+func Status(ignore string) (Report, error) {
+	updated, err := getUpdatedLock(ignore)
 	if err != nil {
 		return Report{}, err
 	}
