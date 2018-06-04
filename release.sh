@@ -1,9 +1,10 @@
 #!/bin/bash
 
+set +x
+
 rootDir="$(pwd)"
 pkgDir="${rootDir}/pkg"
 
-set +x
 rm -rf "${pkgDir}"
 mkdir -p "${pkgDir}"
 
@@ -34,6 +35,8 @@ function build() {
   )
 }
 
+go vet
+go test
 for os in darwin linux windows
 do
   build "${os}" amd64
