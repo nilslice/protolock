@@ -30,6 +30,11 @@ message Display {
   map<string, int32> b_map = 4;
 }
 
+enum Enum {
+  FIRST = 0;
+  SECOND = 1;
+}
+
 // @protolock:skip
 message NextRequest {}
 

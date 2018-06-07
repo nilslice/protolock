@@ -507,6 +507,26 @@ message B {
 }
 `
 
+const noUsingReservedEnumFields = `syntax = "proto3";
+package main;
+
+enum Numbers {
+	reserved 0;
+	ONE = 1;
+	TWO = 2;
+}
+`
+
+const usingReservedEnumFields = `syntax = "proto3";
+package main;
+
+enum Numbers {
+	ZERO = 0;
+	ONE = 1;
+	TWO = 2;
+}
+`
+
 func TestParseOnReader(t *testing.T) {
 	r := strings.NewReader(simpleProto)
 	_, err := parse(r)
@@ -638,6 +658,16 @@ func TestShouldConflictReusingFieldsNestedMessages(t *testing.T) {
 	SetDebug(true)
 	curLock := parseTestProto(t, noConflictSameNameNestedMessages)
 	updLock := parseTestProto(t, shouldConflictNestedMessage)
+
+	warnings, ok := NoUsingReservedFields(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 1)
+}
+
+func TestNoUsingReservedEnumFields(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noUsingReservedEnumFields)
+	updLock := parseTestProto(t, usingReservedEnumFields)
 
 	warnings, ok := NoUsingReservedFields(curLock, updLock)
 	assert.False(t, ok)
