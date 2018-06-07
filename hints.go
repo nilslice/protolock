@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/emicklei/proto"
+	"github.com/wikiwong/proto"
 )
 
 const (
