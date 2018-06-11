@@ -26,18 +26,20 @@ Commands:
 Options:
 	--strict [true]		enable strict mode and enforce all built-in rules
 	--debug	[false]		enable debug mode and output debug messages
+	--ignore 		comma-separated list of filepaths to ignore
 `
 
 var (
 	options = flag.NewFlagSet("options", flag.ExitOnError)
 	debug   = options.Bool("debug", false, "toggle debug mode for verbose output")
 	strict  = options.Bool("strict", true, "toggle strict mode, to determine which rules are enforced")
-	ignore  = options.String("ignore", "", "comma-separated list of directories to ignore.")
+	ignore  = options.String("ignore", "", "comma-separated list of filepaths to ignore")
 )
 
 func main() {
 	// exit if no command (i.e. help, -h, --help, init, status, or commit)
 	if len(os.Args) < 2 {
+		fmt.Println(usage)
 		os.Exit(0)
 	}
 

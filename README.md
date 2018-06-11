@@ -33,6 +33,7 @@ Commands:
 Options:
 	--strict [true]		enable strict mode and enforce all built-in rules
 	--debug	[false]		enable debug mode and output debug messages
+        --ignore 		comma-separated list of filepaths to ignore
 ```
 
 ## Overview
