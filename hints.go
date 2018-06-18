@@ -27,6 +27,10 @@ var (
 func checkComments(v interface{}) []error {
 	var errs []error
 	switch v.(type) {
+	case *proto.Enum:
+		e := v.(*proto.Enum)
+		errs = append(errs, hints(e.Comment)...)
+
 	case *proto.Message:
 		m := v.(*proto.Message)
 		errs = append(errs, hints(m.Comment)...)

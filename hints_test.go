@@ -36,6 +36,11 @@ message Volume {
 	float32 level = 1;
 }
 
+// @protolock:skip
+enum ShouldSkipEnum {
+	ZERO = 0;
+}
+
 service VolumeChanger {
 	rpc Increase(stream IncreaseRequest) returns (Volume);
 	rpc Decrease(DecreaseRequest) returns (Volume);
