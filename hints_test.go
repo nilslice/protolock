@@ -25,7 +25,7 @@ message NextRequest {
 		NOTHING = 1;
 	}
 }
-// this text before our hint shouln't matter +(#*)//.~  @protolock:skip
+// this text before our hint shouldn't matter +(#*)//.~  @protolock:skip
 message PreviousRequest {}
 
 // @protolock:skip
