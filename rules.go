@@ -90,7 +90,7 @@ type lockRPCMap map[protopath]map[string]map[string]RPC
 // table of filepath -> message name -> field ID -> field name
 type lockFieldIDNameMap map[protopath]map[string]map[int]string
 
-func parseNestedMessages(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath protopath, prefix string, msg Message) {
+func incMessageFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath protopath, prefix string, msg Message) {
 	name := prefix + msg.Name
 	for _, field := range msg.Fields {
 		if reservedIDMap[filepath][name] == nil {
@@ -114,7 +114,32 @@ func parseNestedMessages(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap,
 	}
 
 	for _, m := range msg.Messages {
-		parseNestedMessages(reservedIDMap, reservedNameMap, filepath, name+nestedPrefix, m)
+		incMessageFields(
+			reservedIDMap, reservedNameMap,
+			filepath, name+nestedPrefix, m,
+		)
+	}
+}
+
+func incEnumFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath protopath, enum Enum) {
+	for _, field := range enum.EnumFields {
+		if reservedIDMap[filepath][enum.Name] == nil {
+			reservedIDMap[filepath][enum.Name] = make(map[int]int)
+		}
+		if reservedNameMap[filepath][enum.Name] == nil {
+			reservedNameMap[filepath][enum.Name] = make(map[string]int)
+		}
+
+		for id := range reservedIDMap[filepath][enum.Name] {
+			if field.Integer == id {
+				reservedIDMap[filepath][enum.Name][field.Integer]++
+			}
+		}
+		for name := range reservedNameMap[filepath][enum.Name] {
+			if field.Name == name {
+				reservedNameMap[filepath][enum.Name][field.Name]++
+			}
+		}
 	}
 }
 
@@ -127,6 +152,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 	}
 
 	reservedIDMap, reservedNameMap := getReservedFields(cur)
+	reservedEnumIDMap, reservedEnumNameMap := getReservedEnumFields(cur)
 
 	// add each messages field name/number to the existing list identified as
 	// reserved to analyze
@@ -138,11 +164,30 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 			reservedNameMap[def.Filepath] = make(map[string]map[string]int)
 		}
 		for _, msg := range def.Def.Messages {
-			parseNestedMessages(reservedIDMap, reservedNameMap, def.Filepath, "", msg)
+			incMessageFields(
+				reservedIDMap, reservedNameMap,
+				def.Filepath, "", msg,
+			)
+		}
+
+		if reservedEnumIDMap[def.Filepath] == nil {
+			reservedEnumIDMap[def.Filepath] = make(map[string]map[int]int)
+		}
+		if reservedEnumNameMap[def.Filepath] == nil {
+			reservedEnumNameMap[def.Filepath] = make(map[string]map[string]int)
+		}
+		for _, enum := range def.Def.Enums {
+			incEnumFields(
+				reservedEnumIDMap, reservedEnumNameMap,
+				def.Filepath, enum,
+			)
 		}
 	}
 
 	var warnings []Warning
+
+	// Find message conflicts (using reserved names or IDs)
+
 	// if the field ID was encountered more than once per message, then it
 	// is known to be a re-use of a reserved field and a warning should be
 	// returned for each occurrance
@@ -172,6 +217,47 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 					msg := fmt.Sprintf(
 						`"%s" is re-using name: "%s", a reserved field name`,
 						msgName, name,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: osPath(path),
+						Message:  msg,
+					})
+				}
+			}
+		}
+	}
+
+	// Find enum conflicts (using reserved names or integers)
+
+	// if the enum value was encountered more than once per message, then it
+	// is known to be a re-use of a reserved field and a warning should be
+	// returned for each occurrance
+	for path, m := range reservedEnumIDMap {
+		for enumName, mm := range m {
+			for id, count := range mm {
+				if count > 1 {
+					msg := fmt.Sprintf(
+						`"%s" is re-using integer: %d, a reserved value`,
+						enumName, id,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: osPath(path),
+						Message:  msg,
+					})
+				}
+			}
+		}
+	}
+	// if the enum name was encountered more than once per message, then it
+	// is known to be a re-use of a reserved field and a warning should be
+	// returned for each occurrance
+	for path, m := range reservedEnumNameMap {
+		for enumName, mm := range m {
+			for name, count := range mm {
+				if count > 1 {
+					msg := fmt.Sprintf(
+						`"%s" is re-using name: "%s", a reserved name`,
+						enumName, name,
 					)
 					warnings = append(warnings, Warning{
 						Filepath: osPath(path),
@@ -662,6 +748,37 @@ func getReservedFields(lock Protolock) (lockIDsMap, lockNamesMap) {
 			getReservedFieldsRecursive(reservedIDMap, reservedNameMap, def.Filepath, "", msg)
 		}
 
+	}
+
+	return reservedIDMap, reservedNameMap
+}
+
+func getReservedEnumFields(lock Protolock) (lockIDsMap, lockNamesMap) {
+	reservedIDMap := make(lockIDsMap)
+	reservedNameMap := make(lockNamesMap)
+
+	for _, def := range lock.Definitions {
+		if reservedIDMap[def.Filepath] == nil {
+			reservedIDMap[def.Filepath] = make(map[string]map[int]int)
+		}
+		if reservedNameMap[def.Filepath] == nil {
+			reservedNameMap[def.Filepath] = make(map[string]map[string]int)
+		}
+
+		for _, enum := range def.Def.Enums {
+			for _, id := range enum.ReservedIDs {
+				if reservedIDMap[def.Filepath][enum.Name] == nil {
+					reservedIDMap[def.Filepath][enum.Name] = make(map[int]int)
+				}
+				reservedIDMap[def.Filepath][enum.Name][id]++
+			}
+			for _, name := range enum.ReservedNames {
+				if reservedNameMap[def.Filepath][enum.Name] == nil {
+					reservedNameMap[def.Filepath][enum.Name] = make(map[string]int)
+				}
+				reservedNameMap[def.Filepath][enum.Name][name]++
+			}
+		}
 	}
 
 	return reservedIDMap, reservedNameMap

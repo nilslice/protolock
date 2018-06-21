@@ -13,7 +13,11 @@ import (
 	"github.com/emicklei/proto"
 )
 
-const LockFileName = "proto.lock"
+const (
+	LockFileName = "proto.lock"
+
+	OptionAllowAlias = "allow_alias"
+)
 
 type Protolock struct {
 	Definitions []Definition `json:"definitions,omitempty"`
@@ -50,6 +54,7 @@ type Enum struct {
 	EnumFields    []EnumField `json:"enum_fields,omitempty"`
 	ReservedIDs   []int       `json:"reserved_ids,omitempty"`
 	ReservedNames []string    `json:"reserved_names,omitempty"`
+	AllowAlias    bool        `json:"allow_alias,omitempty"`
 }
 
 type Map struct {

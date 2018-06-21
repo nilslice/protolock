@@ -50,6 +50,22 @@ message PreviousRequest {
   }
 }
 
+enum WithAllowAlias {
+  reserved "DONTUSE";
+  reserved 2;
+  option allow_alias = true;
+  UNKNOWN = 0;
+  STARTED = 1;
+  RUNNING = 1;
+}
+
+enum NoWithAllowAlias {
+  reserved "DONTUSE2";
+  reserved 2;
+  UNKNOWN2 = 0;
+  STARTED2 = 1;
+}
+
 service ChannelChanger {
 	rpc Next(stream NextRequest) returns (Channel);
 	rpc Previous(PreviousRequest) returns (stream Channel);
@@ -82,9 +98,26 @@ message PreviousRequest {
     int64 id = 1;
     bool is_active = 2;
     string no_use = 3;
-    float32 thing = 4;
+    float thing = 4;
   }
 }
+
+enum WithAllowAlias {
+  option allow_alias = true;
+  UNKNOWN = 0;
+  STARTED = 1;
+  RUNNING = 1;
+  STOPPED = 2;
+  DONTUSE = 3;
+}
+
+enum NoWithAllowAlias {
+  UNKNOWN2 = 0;
+  STARTED2 = 1;
+  DONTUSE2 = 1;
+  STOPPED2 = 2;
+}
+
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -507,26 +540,6 @@ message B {
 }
 `
 
-const noUsingReservedEnumFields = `syntax = "proto3";
-package main;
-
-enum Numbers {
-	reserved 0;
-	ONE = 1;
-	TWO = 2;
-}
-`
-
-const usingReservedEnumFields = `syntax = "proto3";
-package main;
-
-enum Numbers {
-	ZERO = 0;
-	ONE = 1;
-	TWO = 2;
-}
-`
-
 func TestParseOnReader(t *testing.T) {
 	r := strings.NewReader(simpleProto)
 	_, err := parse(r)
@@ -596,7 +609,7 @@ func TestUsingReservedFields(t *testing.T) {
 
 	warnings, ok := NoUsingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 7)
+	assert.Len(t, warnings, 11)
 
 	warnings, ok = NoUsingReservedFields(updLock, updLock)
 	assert.True(t, ok)
@@ -664,16 +677,6 @@ func TestShouldConflictReusingFieldsNestedMessages(t *testing.T) {
 	assert.Len(t, warnings, 1)
 }
 
-func TestNoUsingReservedEnumFields(t *testing.T) {
-	SetDebug(true)
-	curLock := parseTestProto(t, noUsingReservedEnumFields)
-	updLock := parseTestProto(t, usingReservedEnumFields)
-
-	warnings, ok := NoUsingReservedFields(curLock, updLock)
-	assert.False(t, ok)
-	assert.Len(t, warnings, 1)
-}
-
 func parseTestProto(t *testing.T, proto string) Protolock {
 	r := strings.NewReader(proto)
 	entry, err := parse(r)
@@ -681,7 +684,7 @@ func parseTestProto(t *testing.T, proto string) Protolock {
 	return Protolock{
 		Definitions: []Definition{
 			{
-				Filepath: protopath("testdata/no-test.proto"),
+				Filepath: protopath("memory/io.Reader"),
 				Def:      entry,
 			},
 		},
