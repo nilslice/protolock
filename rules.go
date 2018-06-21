@@ -294,6 +294,8 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 	var warnings []Warning
 	// check that all reserved fields on current Protolock remain in the
 	// updated Protolock
+
+	// check all reserved fields on messages
 	curReservedIDMap, curReservedNameMap := getReservedFields(cur)
 	updReservedIDMap, updReservedNameMap := getReservedFields(upd)
 	for path, msgMap := range curReservedIDMap {
@@ -319,6 +321,42 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 					msg := fmt.Sprintf(
 						`"%s" is missing name: "%s", which had been reserved`,
 						msgName, name,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: osPath(path),
+						Message:  msg,
+					})
+				}
+			}
+		}
+	}
+
+	// check all reserved fields on enums
+	curReservedEnumIDMap, curReservedEnumNameMap := getReservedEnumFields(cur)
+	updReservedEnumIDMap, updReservedEnumNameMap := getReservedEnumFields(upd)
+	for path, enumMap := range curReservedEnumIDMap {
+		for enumName, idMap := range enumMap {
+			for id := range idMap {
+				if _, ok := updReservedEnumIDMap[path][enumName][id]; !ok {
+					msg := fmt.Sprintf(
+						`"%s" is missing integer: %d, which had been reserved`,
+						enumName, id,
+					)
+					warnings = append(warnings, Warning{
+						Filepath: osPath(path),
+						Message:  msg,
+					})
+				}
+			}
+		}
+	}
+	for path, enumMap := range curReservedEnumNameMap {
+		for enumName, nameMap := range enumMap {
+			for name := range nameMap {
+				if _, ok := updReservedEnumNameMap[path][enumName][name]; !ok {
+					msg := fmt.Sprintf(
+						`"%s" is missing name: "%s", which had been reserved`,
+						enumName, name,
 					)
 					warnings = append(warnings, Warning{
 						Filepath: osPath(path),
@@ -747,7 +785,6 @@ func getReservedFields(lock Protolock) (lockIDsMap, lockNamesMap) {
 		for _, msg := range def.Def.Messages {
 			getReservedFieldsRecursive(reservedIDMap, reservedNameMap, def.Filepath, "", msg)
 		}
-
 	}
 
 	return reservedIDMap, reservedNameMap
