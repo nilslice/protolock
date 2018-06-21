@@ -385,10 +385,12 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 		beginRuleDebug("NoChangingFieldIDs")
 	}
 
+	var warnings []Warning
+
+	// check all non-reserved message fields
 	curNameIDMap := getNonReservedFields(cur)
 	updNameIDMap := getNonReservedFields(upd)
 
-	var warnings []Warning
 	// check that all current Protolock names map to the same IDs as the
 	// updated Protolock
 	for path, msgMap := range curNameIDMap {
@@ -400,6 +402,32 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 						msg := fmt.Sprintf(
 							`"%s" field: "%s" has a different ID: %d, previously %d`,
 							msgName, fieldName, updFieldID, fieldID,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: osPath(path),
+							Message:  msg,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// check all non-reserved enum fields
+	curEnumNameIDMap := getNonReservedEnumFields(cur)
+	updEnumNameIDMap := getNonReservedEnumFields(upd)
+
+	// check that all current Protolock names map to the same IDs as the
+	// updated Protolock
+	for path, enumMap := range curEnumNameIDMap {
+		for enumName, fieldMap := range enumMap {
+			for fieldName, fieldInteger := range fieldMap {
+				updFieldInteger, ok := updEnumNameIDMap[path][enumName][fieldName]
+				if ok {
+					if updFieldInteger != fieldInteger {
+						msg := fmt.Sprintf(
+							`"%s" field: "%s" has a different integer: %d, previously %d`,
+							enumName, fieldName, updFieldInteger, fieldInteger,
 						)
 						warnings = append(warnings, Warning{
 							Filepath: osPath(path),
@@ -870,6 +898,28 @@ func getNonReservedFields(lock Protolock) lockNamesMap {
 					nameIDMap[def.Filepath][msg.Name] = make(map[string]int)
 				}
 				nameIDMap[def.Filepath][msg.Name][mp.Field.Name] = mp.Field.ID
+			}
+		}
+	}
+
+	return nameIDMap
+}
+
+// getNonReservedEnumFields gets all the non-reserved field numbers and names,
+// and stashes them in a lockNamesMap to be checked against.
+func getNonReservedEnumFields(lock Protolock) lockNamesMap {
+	nameIDMap := make(lockNamesMap)
+
+	for _, def := range lock.Definitions {
+		if nameIDMap[def.Filepath] == nil {
+			nameIDMap[def.Filepath] = make(map[string]map[string]int)
+		}
+		for _, enum := range def.Def.Enums {
+			for _, field := range enum.EnumFields {
+				if nameIDMap[def.Filepath][enum.Name] == nil {
+					nameIDMap[def.Filepath][enum.Name] = make(map[string]int)
+				}
+				nameIDMap[def.Filepath][enum.Name][field.Name] = field.Integer
 			}
 		}
 	}
