@@ -19,7 +19,12 @@ message Channel {
   int32 age = 5;
 }
 
-message NextRequest {}
+message NextRequest {
+	// @protolock:skip
+	enum DontTrack {
+		NOTHING = 1;
+	}
+}
 // this text before our hint shouln't matter +(#*)//.~  @protolock:skip
 message PreviousRequest {}
 
@@ -41,6 +46,10 @@ enum ShouldSkipEnum {
 	ZERO = 0;
 }
 
+enum ShouldTrack {
+	OK = 1;
+}
+
 service VolumeChanger {
 	rpc Increase(stream IncreaseRequest) returns (Volume);
 	rpc Decrease(DecreaseRequest) returns (Volume);
@@ -59,6 +68,10 @@ func TestHints(t *testing.T) {
 		t.Run("skip:services", func(t *testing.T) {
 			assert.Len(t, def.Def.Services, 1)
 			assert.Equal(t, def.Def.Services[0].Name, "VolumeChanger")
+		})
+		t.Run("skip:enums", func(t *testing.T) {
+			assert.Len(t, def.Def.Enums, 1)
+			assert.Equal(t, def.Def.Enums[0].Name, "ShouldTrack")
 		})
 	}
 }
