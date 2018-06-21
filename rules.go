@@ -130,12 +130,12 @@ func incEnumFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filep
 			reservedNameMap[filepath][enum.Name] = make(map[string]int)
 		}
 
-		for _, id := range enum.ReservedIDs {
+		for id := range reservedIDMap[filepath][enum.Name] {
 			if field.Integer == id {
 				reservedIDMap[filepath][enum.Name][field.Integer]++
 			}
 		}
-		for _, name := range enum.ReservedNames {
+		for name := range reservedNameMap[filepath][enum.Name] {
 			if field.Name == name {
 				reservedNameMap[filepath][enum.Name][field.Name]++
 			}
