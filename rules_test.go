@@ -574,6 +574,21 @@ message PreviousRequest {
     int64 id = 1;
     bool is_active = 2;
   }
+
+  enum NestedEnum {
+    option allow_alias = true;
+
+    ONE = 1;
+    UNO = 1;
+    TWO = 2;
+  }
+
+  NestEnum value = 4;
+}
+
+enum AnotherEnum {
+  ABC = 1;
+  DEF = 2;
 }
 
 service ChannelChanger {
@@ -599,6 +614,20 @@ message NextRequest {
 
 message PreviousRequest {
   reserved 1;
+
+  enum NestedEnum {
+    reserved 1;
+    reserved "ONE";
+    option allow_alias = true;
+
+    TWO = 2;
+  }
+
+  NestEnum value = 4;
+}
+
+enum AnotherEnum {
+  DEF = 2;
 }
 
 service ChannelChanger {
@@ -764,7 +793,7 @@ func TestRemovingFieldsWithoutReserve(t *testing.T) {
 
 	warnings, ok := NoRemovingFieldsWithoutReserve(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 6)
+	assert.Len(t, warnings, 9)
 
 	warnings, ok = NoRemovingFieldsWithoutReserve(updLock, updLock)
 	assert.True(t, ok)
