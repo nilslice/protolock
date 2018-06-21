@@ -30,6 +30,28 @@ message Display {
   map<string, int32> b_map = 4;
 }
 
+enum TestEnum {
+  reserved 2;
+  option allow_alias = true;
+  FIRST = 0;
+  SECOND = 1;
+  SEGUNDO = 1;
+}
+
+message ContainsEnum {
+  int32 id = 1;
+
+  enum NestedEnum {
+    reserved 101;
+    reserved "DEPTH";
+    
+    ABC = 1;
+    DEF = 2;
+  }
+
+  NestedEnum value = 2;
+}
+
 // @protolock:skip
 message NextRequest {}
 

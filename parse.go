@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -25,6 +26,7 @@ type Definition struct {
 }
 
 type Entry struct {
+	Enums    []Enum    `json:"enums,omitempty"`
 	Messages []Message `json:"messages,omitempty"`
 	Services []Service `json:"services,omitempty"`
 }
@@ -37,6 +39,19 @@ type Message struct {
 	ReservedNames []string  `json:"reserved_names,omitempty"`
 	Filepath      protopath `json:"filepath,omitempty"`
 	Messages      []Message `json:"messages,omitempty"`
+}
+
+type EnumField struct {
+	Name    string `json:"name,omitempty"`
+	Integer int    `json:"integer"`
+}
+
+type Enum struct {
+	Name          string      `json:"name,omitempty"`
+	EnumFields    []EnumField `json:"enum_fields,omitempty"`
+	ReservedIDs   []int       `json:"reserved_ids,omitempty"`
+	ReservedNames []string    `json:"reserved_names,omitempty"`
+	AllowAlias    bool        `json:"allow_alias,omitempty"`
 }
 
 type Map struct {
@@ -75,8 +90,9 @@ type Warning struct {
 }
 
 var (
-	msgs []Message
-	svcs []Service
+	enums []Enum
+	msgs  []Message
+	svcs  []Service
 )
 
 func parse(r io.Reader) (Entry, error) {
@@ -86,19 +102,79 @@ func parse(r io.Reader) (Entry, error) {
 		return Entry{}, err
 	}
 
+	enums = []Enum{}
 	msgs = []Message{}
 	svcs = []Service{}
 
 	proto.Walk(
 		def,
+		proto.WithEnum(withEnum),
 		proto.WithService(withService),
 		proto.WithMessage(withMessage),
 	)
 
 	return Entry{
+		Enums:    enums,
 		Messages: msgs,
 		Services: svcs,
 	}, nil
+}
+
+func withEnum(e *proto.Enum) {
+	errs := checkComments(e)
+	if errs != nil {
+		for _, err := range errs {
+			switch err {
+			case ErrSkipEntry:
+				return
+			}
+		}
+	}
+
+	// handle nested enum within message, prepend message name to enum name
+	if p, ok := e.Parent.(*proto.Message); ok {
+		if p != nil {
+			e.Name = fmt.Sprintf("%s.%s", p.Name, e.Name)
+		}
+	}
+
+	enums = append(enums, parseEnum(e))
+}
+
+func parseEnum(e *proto.Enum) Enum {
+	enum := Enum{
+		Name: e.Name,
+	}
+
+	for _, v := range e.Elements {
+		if e, ok := v.(*proto.EnumField); ok {
+			enum.EnumFields = append(enum.EnumFields, EnumField{
+				Name:    e.Name,
+				Integer: e.Integer,
+			})
+		}
+
+		if r, ok := v.(*proto.Reserved); ok {
+			// collect all reserved field IDs from the ranges
+			for _, rng := range r.Ranges {
+				// if range is only a single value, skip loop and
+				// append single value to message's reserved slice
+				if rng.From == rng.To {
+					enum.ReservedIDs = append(enum.ReservedIDs, rng.From)
+					continue
+				}
+				// add each item from the range inclusively
+				for id := rng.From; id <= rng.To; id++ {
+					enum.ReservedIDs = append(enum.ReservedIDs, id)
+				}
+			}
+
+			// add all reserved field names
+			enum.ReservedNames = append(enum.ReservedNames, r.FieldNames...)
+		}
+	}
+
+	return enum
 }
 
 func withService(s *proto.Service) {

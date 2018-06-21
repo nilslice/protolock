@@ -50,6 +50,33 @@ message PreviousRequest {
   }
 }
 
+enum WithAllowAlias {
+  reserved "DONTUSE";
+  reserved 2;
+  option allow_alias = true;
+  UNKNOWN = 0;
+  STARTED = 1;
+  RUNNING = 1;
+}
+
+enum NoWithAllowAlias {
+  reserved "DONTUSE2";
+  reserved 2;
+  UNKNOWN2 = 0;
+  STARTED2 = 1;
+}
+
+message IHaveAnEnum {
+  int32 id = 1;
+
+  enum IAmTheEnum {
+    reserved "NONE";
+    reserved 101;
+    ALL = 0;
+    SOME = 100;
+  }
+}
+
 service ChannelChanger {
 	rpc Next(stream NextRequest) returns (Channel);
 	rpc Previous(PreviousRequest) returns (stream Channel);
@@ -82,7 +109,34 @@ message PreviousRequest {
     int64 id = 1;
     bool is_active = 2;
     string no_use = 3;
-    float32 thing = 4;
+    float thing = 4;
+  }
+}
+
+enum WithAllowAlias {
+  option allow_alias = true;
+  UNKNOWN = 0;
+  STARTED = 1;
+  RUNNING = 1;
+  STOPPED = 2;
+  DONTUSE = 3;
+}
+
+enum NoWithAllowAlias {
+  UNKNOWN2 = 0;
+  STARTED2 = 1;
+  DONTUSE2 = 1;
+  STOPPED2 = 2;
+}
+
+message IHaveAnEnum {
+  int32 id = 1;
+
+  enum IAmTheEnum {
+    ALL = 0;
+    SOME = 100;
+    NONE = 1;
+    FEW = 101;
   }
 }
 
@@ -117,6 +171,26 @@ message PreviousRequest {
     int64 id = 1;
     bool is_active = 2;
   }
+
+  enum NestedEnum {
+    reserved 11;
+    reserved "NOPE";
+
+    LOCATION = 1;
+  }
+
+  NestedEnum value = 3;
+}
+
+enum AnotherEnum {
+  reserved 2;
+  reserved "DONTUSEIT";
+
+  option allow_alias = true;
+
+  USE = 2;
+  OK = 3;
+  FINE = 3;
 }
 
 service ChannelChanger {
@@ -147,6 +221,20 @@ message PreviousRequest {
     int64 id = 1;
     bool is_active = 2;
   }
+
+  enum NestedEnum {
+    LOCATION = 1;
+  }
+
+  NestedEnum value = 3;
+}
+
+enum AnotherEnum {
+  option allow_alias = true;
+
+  USE = 2;
+  OK = 3;
+  FINE = 3;
 }
 
 service ChannelChanger {
@@ -177,6 +265,22 @@ message PreviousRequest {
     int64 id = 1;
     bool is_active = 2;
   }
+
+  enum NestedEnum {
+    option allow_alias = true;
+
+    ONE = 1;
+    UNO = 1;
+    TWO = 2;
+    THREE = 3;
+  }
+
+  NestedEnum value = 3;
+}
+
+enum AnotherEnum {
+  ABC = 1;
+  DEF = 2;
 }
 
 service ChannelChanger {
@@ -207,6 +311,22 @@ message PreviousRequest {
     int64 id = 11;
     bool is_active = 32;
   }
+
+  enum NestedEnum {
+    option allow_alias = true;
+
+    ONE = 1;
+    UNO = 7;
+    TWO = 2;
+    THREE = 3;
+  }
+
+  NestedEnum value = 3;
+}
+
+enum AnotherEnum {
+  ABC = 1;
+  DEF = 99;
 }
 
 service ChannelChanger {
@@ -293,6 +413,19 @@ message PreviousRequest {
     string name = 4;
     bool is_active = 9;
   }
+
+  enum NestedEnum {
+    option allow_alias = true;
+
+    ONE = 1;
+    TWO = 2;
+    DOS = 2;
+  }
+}
+
+enum AnotherEnum {
+  ABC = 1;
+  DEF = 2;
 }
 
 service ChannelChanger {
@@ -322,6 +455,19 @@ message PreviousRequest {
     string name_2 = 4;
     bool is_active = 9;
   }
+
+  enum NestedEnum {
+    option allow_alias = true;
+
+    UNO = 1;
+    TWO = 2;
+    DOS = 2;
+  }
+}
+
+enum AnotherEnum {
+  ABC = 1;
+  GHI = 2;
 }
 
 service ChannelChanger {
@@ -428,6 +574,21 @@ message PreviousRequest {
     int64 id = 1;
     bool is_active = 2;
   }
+
+  enum NestedEnum {
+    option allow_alias = true;
+
+    ONE = 1;
+    UNO = 1;
+    TWO = 2;
+  }
+
+  NestEnum value = 4;
+}
+
+enum AnotherEnum {
+  ABC = 1;
+  DEF = 2;
 }
 
 service ChannelChanger {
@@ -453,6 +614,20 @@ message NextRequest {
 
 message PreviousRequest {
   reserved 1;
+
+  enum NestedEnum {
+    reserved 1;
+    reserved "ONE";
+    option allow_alias = true;
+
+    TWO = 2;
+  }
+
+  NestEnum value = 4;
+}
+
+enum AnotherEnum {
+  DEF = 2;
 }
 
 service ChannelChanger {
@@ -548,7 +723,7 @@ func TestChangingFieldNames(t *testing.T) {
 
 	warnings, ok := NoChangingFieldNames(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 6)
+	assert.Len(t, warnings, 8)
 
 	warnings, ok = NoChangingFieldNames(updLock, updLock)
 	assert.True(t, ok)
@@ -576,7 +751,7 @@ func TestUsingReservedFields(t *testing.T) {
 
 	warnings, ok := NoUsingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 7)
+	assert.Len(t, warnings, 13)
 
 	warnings, ok = NoUsingReservedFields(updLock, updLock)
 	assert.True(t, ok)
@@ -590,7 +765,7 @@ func TestRemovingReservedFields(t *testing.T) {
 
 	warnings, ok := NoRemovingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 9)
+	assert.Len(t, warnings, 13)
 
 	warnings, ok = NoRemovingReservedFields(updLock, updLock)
 	assert.True(t, ok)
@@ -604,7 +779,7 @@ func TestChangingFieldIDs(t *testing.T) {
 
 	warnings, ok := NoChangingFieldIDs(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 5)
+	assert.Len(t, warnings, 7)
 
 	warnings, ok = NoChangingFieldIDs(updLock, updLock)
 	assert.True(t, ok)
@@ -618,7 +793,7 @@ func TestRemovingFieldsWithoutReserve(t *testing.T) {
 
 	warnings, ok := NoRemovingFieldsWithoutReserve(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 6)
+	assert.Len(t, warnings, 9)
 
 	warnings, ok = NoRemovingFieldsWithoutReserve(updLock, updLock)
 	assert.True(t, ok)
@@ -651,7 +826,7 @@ func parseTestProto(t *testing.T, proto string) Protolock {
 	return Protolock{
 		Definitions: []Definition{
 			{
-				Filepath: protopath("testdata/no-test.proto"),
+				Filepath: protopath("memory/io.Reader"),
 				Def:      entry,
 			},
 		},
