@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -134,8 +135,11 @@ func withEnum(e *proto.Enum) {
 		}
 	}
 
-	if _, ok := e.Parent.(*proto.Proto); !ok {
-		return
+	// handle nested enum within message, prepend message name to enum name
+	if p, ok := e.Parent.(*proto.Message); ok {
+		if p != nil {
+			e.Name = fmt.Sprintf("%s.%s", p.Name, e.Name)
+		}
 	}
 
 	enums = append(enums, parseEnum(e))
