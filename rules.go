@@ -78,6 +78,10 @@ type lockNamesMap map[protopath]map[string]map[string]int
 // table of filepath -> message name -> field name -> field type
 type lockFieldMap map[protopath]map[string]map[string]Field
 
+// lockEnumFieldMap:
+// table of filepath -> message name -> field name -> enum field type
+type lockEnumFieldMap map[protopath]map[string]map[string]EnumField
+
 // lockMapMap:
 // table of filepath -> message name -> Map name -> Map type
 type lockMapMap map[protopath]map[string]map[string]Map
@@ -661,11 +665,14 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 	}
 
 	var warnings []Warning
+
+	// check all message fields
+	curFieldMap := getFieldMap(cur)
+	updFieldMap := getFieldMap(upd)
+
 	// check that if a field name from the current Protolock is not retained
 	// in the updated Protolock, then the field's name and ID should become
 	// reserved within the parent message
-	curFieldMap := getFieldMap(cur)
-	updFieldMap := getFieldMap(upd)
 	for path, msgMap := range curFieldMap {
 		for msgName, fieldMap := range msgMap {
 			encounteredIDs := make(map[int]int)
@@ -700,6 +707,58 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 						msg := fmt.Sprintf(
 							`"%s" ID: "%d" has been removed, but is not reserved`,
 							msgName, field.ID,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: osPath(path),
+							Message:  msg,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// check all enum fields
+	curEnumFieldMap := getEnumFieldMap(cur)
+	updEnumFieldMap := getEnumFieldMap(upd)
+
+	// check that if a field name from the current Protolock is not retained
+	// in the updated Protolock, then the field's name and integer should
+	// become reserved within the parent enum
+	for path, enumMap := range curEnumFieldMap {
+		for enumName, fieldMap := range enumMap {
+			encounteredIDs := make(map[int]int)
+			for _, field := range updEnumFieldMap[path][enumName] {
+				encounteredIDs[field.Integer]++
+			}
+			for fieldName, field := range fieldMap {
+				_, ok := updEnumFieldMap[path][enumName][fieldName]
+				if !ok {
+					// check that the field name and ID are
+					// both in the reserved fields for this
+					// enum
+					resIDsMap, resNamesMap := getReservedEnumFields(upd)
+					if _, ok := resNamesMap[path][enumName][field.Name]; !ok {
+						msg := fmt.Sprintf(
+							`"%s" field: "%s" has been removed, but is not reserved`,
+							enumName, field.Name,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: osPath(path),
+							Message:  msg,
+						})
+					}
+
+					// check that the integer for this missing field is being re-used
+					// in which case will be caught by NoChangingFieldNames
+					if _, ok := encounteredIDs[field.Integer]; ok {
+						continue
+					}
+
+					if _, ok := resIDsMap[path][enumName][field.Integer]; !ok {
+						msg := fmt.Sprintf(
+							`"%s" integer: "%d" has been removed, but is not reserved`,
+							enumName, field.Integer,
 						)
 						warnings = append(warnings, Warning{
 							Filepath: osPath(path),
@@ -1020,6 +1079,28 @@ func getFieldMap(lock Protolock) lockFieldMap {
 					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Field)
 				}
 				nameTypeMap[def.Filepath][msg.Name][mp.Field.Name] = mp.Field
+			}
+		}
+	}
+
+	return nameTypeMap
+}
+
+// getEnumFieldMap gets all the field names and types, and stashes them in a
+// lockEnumFieldMap to be checked against.
+func getEnumFieldMap(lock Protolock) lockEnumFieldMap {
+	nameTypeMap := make(lockEnumFieldMap)
+
+	for _, def := range lock.Definitions {
+		if nameTypeMap[def.Filepath] == nil {
+			nameTypeMap[def.Filepath] = make(map[string]map[string]EnumField)
+		}
+		for _, enum := range def.Def.Enums {
+			for _, field := range enum.EnumFields {
+				if nameTypeMap[def.Filepath][enum.Name] == nil {
+					nameTypeMap[def.Filepath][enum.Name] = make(map[string]EnumField)
+				}
+				nameTypeMap[def.Filepath][enum.Name][field.Name] = field
 			}
 		}
 	}
