@@ -413,6 +413,19 @@ message PreviousRequest {
     string name = 4;
     bool is_active = 9;
   }
+
+  enum NestedEnum {
+    option allow_alias = true;
+
+    ONE = 1;
+    TWO = 2;
+    DOS = 2;
+  }
+}
+
+enum AnotherEnum {
+  ABC = 1;
+  DEF = 2;
 }
 
 service ChannelChanger {
@@ -442,6 +455,19 @@ message PreviousRequest {
     string name_2 = 4;
     bool is_active = 9;
   }
+
+  enum NestedEnum {
+    option allow_alias = true;
+
+    UNO = 1;
+    TWO = 2;
+    DOS = 2;
+  }
+}
+
+enum AnotherEnum {
+  ABC = 1;
+  GHI = 2;
 }
 
 service ChannelChanger {
@@ -668,7 +694,7 @@ func TestChangingFieldNames(t *testing.T) {
 
 	warnings, ok := NoChangingFieldNames(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 6)
+	assert.Len(t, warnings, 8)
 
 	warnings, ok = NoChangingFieldNames(updLock, updLock)
 	assert.True(t, ok)

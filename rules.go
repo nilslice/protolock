@@ -540,10 +540,12 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 		beginRuleDebug("NoChangingFieldNames")
 	}
 
+	var warnings []Warning
+
+	// check all field names of messages
 	curFieldMap := getFieldsIDName(cur)
 	updFieldMap := getFieldsIDName(upd)
 
-	var warnings []Warning
 	// check that the current Protolock messages' field names are equal to
 	// their relative messages' field names in the updated Protolock
 	for path, msgMap := range curFieldMap {
@@ -555,6 +557,32 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 						msg := fmt.Sprintf(
 							`"%s" field: "%s" ID: %d has an updated name, previously "%s"`,
 							msgName, updFieldName, fieldID, fieldName,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: osPath(path),
+							Message:  msg,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// check all field names of enums
+	curEnumFieldMap := getEnumFieldsIDName(cur)
+	updEnumFieldMap := getEnumFieldsIDName(upd)
+
+	// check that the current Protolock enums' field names are equal to
+	// their relative enums' field names in the updated Protolock
+	for path, enumMap := range curEnumFieldMap {
+		for enumName, fieldMap := range enumMap {
+			for fieldInteger, fieldName := range fieldMap {
+				updFieldName, ok := updEnumFieldMap[path][enumName][fieldInteger]
+				if ok {
+					if updFieldName != fieldName {
+						msg := fmt.Sprintf(
+							`"%s" field: "%s" integer: %d has an updated name, previously "%s"`,
+							enumName, updFieldName, fieldInteger, fieldName,
 						)
 						warnings = append(warnings, Warning{
 							Filepath: osPath(path),
@@ -870,6 +898,28 @@ func getFieldsIDName(lock Protolock) lockFieldIDNameMap {
 					fieldIDNameMap[def.Filepath][msg.Name] = make(map[int]string)
 				}
 				fieldIDNameMap[def.Filepath][msg.Name][mp.Field.ID] = mp.Field.Name
+			}
+		}
+	}
+
+	return fieldIDNameMap
+}
+
+// getEnumFieldsIDName gets all the fields mapped by the field ID to its name
+// for all enums.
+func getEnumFieldsIDName(lock Protolock) lockFieldIDNameMap {
+	fieldIDNameMap := make(lockFieldIDNameMap)
+
+	for _, def := range lock.Definitions {
+		if fieldIDNameMap[def.Filepath] == nil {
+			fieldIDNameMap[def.Filepath] = make(map[string]map[int]string)
+		}
+		for _, enum := range def.Def.Enums {
+			for _, field := range enum.EnumFields {
+				if fieldIDNameMap[def.Filepath][enum.Name] == nil {
+					fieldIDNameMap[def.Filepath][enum.Name] = make(map[int]string)
+				}
+				fieldIDNameMap[def.Filepath][enum.Name][field.Integer] = field.Name
 			}
 		}
 	}
