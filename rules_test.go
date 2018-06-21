@@ -265,6 +265,22 @@ message PreviousRequest {
     int64 id = 1;
     bool is_active = 2;
   }
+
+  enum NestedEnum {
+    option allow_alias = true;
+
+    ONE = 1;
+    UNO = 1;
+    TWO = 2;
+    THREE = 3;
+  }
+
+  NestedEnum value = 3;
+}
+
+enum AnotherEnum {
+  ABC = 1;
+  DEF = 2;
 }
 
 service ChannelChanger {
@@ -295,6 +311,22 @@ message PreviousRequest {
     int64 id = 11;
     bool is_active = 32;
   }
+
+  enum NestedEnum {
+    option allow_alias = true;
+
+    ONE = 1;
+    UNO = 7;
+    TWO = 2;
+    THREE = 3;
+  }
+
+  NestedEnum value = 3;
+}
+
+enum AnotherEnum {
+  ABC = 1;
+  DEF = 99;
 }
 
 service ChannelChanger {
@@ -692,7 +724,7 @@ func TestChangingFieldIDs(t *testing.T) {
 
 	warnings, ok := NoChangingFieldIDs(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 5)
+	assert.Len(t, warnings, 7)
 
 	warnings, ok = NoChangingFieldIDs(updLock, updLock)
 	assert.True(t, ok)
