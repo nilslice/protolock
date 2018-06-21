@@ -30,9 +30,12 @@ message Display {
   map<string, int32> b_map = 4;
 }
 
-enum Enum {
+enum TestEnum {
+  reserved 2;
+  option allow_alias = true;
   FIRST = 0;
   SECOND = 1;
+  SEGUNDO = 1;
 }
 
 // @protolock:skip

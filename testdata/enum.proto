@@ -1,0 +1,97 @@
+// syntax = "proto3";
+// package test;
+
+// message Channel {
+//   reserved 4, 8 to 11;
+//   reserved "foo", "bar";  
+//   int64 id = 1;
+//   string name = 2;
+//   string description = 3;
+// }
+
+// message NextRequest {
+//   reserved 3;
+//   reserved "a_map";
+// }
+
+// message PreviousRequest {
+//   reserved 4;
+//   reserved "no_use";
+//   oneof test_oneof {
+//     int64 id = 1;
+//     bool is_active = 2;
+//   }
+// }
+
+// enum WithAllowAlias {
+//   reserved "DONTUSE";
+//   reserved 2;
+//   option allow_alias = true;
+//   UNKNOWN = 0;
+//   STARTED = 1;
+//   RUNNING = 1;
+// }
+
+// enum NoWithAllowAlias {
+//   reserved "DONTUSE2";
+//   reserved 2;
+//   UNKNOWN2 = 0;
+//   STARTED2 = 1;
+// }
+
+// service ChannelChanger {
+// 	rpc Next(stream NextRequest) returns (Channel);
+// 	rpc Previous(PreviousRequest) returns (stream Channel);
+// }
+
+syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+
+  message A {
+    int32 id = 1;
+    string name = 2;
+  }
+}
+
+message NextRequest {
+  string name = 1;
+  map<string, int32> a_map = 3;
+}
+
+message PreviousRequest {
+  oneof test_oneof {
+    int64 id = 1;
+    bool is_active = 2;
+    string no_use = 3;
+    float thing = 4;
+  }
+}
+
+enum WithAllowAlias {
+  option allow_alias = true;
+  UNKNOWN = 0;
+  STARTED = 1;
+  RUNNING = 1;
+  STOPPED = 2;
+  DONTUSE = 3;
+}
+
+enum NoWithAllowAlias {
+  UNKNOWN2 = 0;
+  STARTED2 = 1;
+  DONTUSE2 = 1;
+  STOPPED2 = 2;
+}
+
+
+service ChannelChanger {
+  rpc Next(stream NextRequest) returns (Channel);
+  rpc Previous(PreviousRequest) returns (stream Channel);
+}
