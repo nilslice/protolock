@@ -14,11 +14,7 @@ import (
 	"github.com/emicklei/proto"
 )
 
-const (
-	LockFileName = "proto.lock"
-
-	OptionAllowAlias = "allow_alias"
-)
+const LockFileName = "proto.lock"
 
 type Protolock struct {
 	Definitions []Definition `json:"definitions,omitempty"`
