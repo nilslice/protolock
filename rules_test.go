@@ -66,6 +66,17 @@ enum NoWithAllowAlias {
   STARTED2 = 1;
 }
 
+message IHaveAnEnum {
+  int32 id = 1;
+
+  enum IAmTheEnum {
+    reserved "NONE";
+    reserved 101;
+    ALL = 0;
+    SOME = 100;
+  }
+}
+
 service ChannelChanger {
 	rpc Next(stream NextRequest) returns (Channel);
 	rpc Previous(PreviousRequest) returns (stream Channel);
@@ -118,6 +129,16 @@ enum NoWithAllowAlias {
   STOPPED2 = 2;
 }
 
+message IHaveAnEnum {
+  int32 id = 1;
+
+  enum IAmTheEnum {
+    ALL = 0;
+    SOME = 100;
+    NONE = 1;
+    FEW = 101;
+  }
+}
 
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
@@ -609,7 +630,7 @@ func TestUsingReservedFields(t *testing.T) {
 
 	warnings, ok := NoUsingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 11)
+	assert.Len(t, warnings, 13)
 
 	warnings, ok = NoUsingReservedFields(updLock, updLock)
 	assert.True(t, ok)
