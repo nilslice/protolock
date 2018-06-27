@@ -9,11 +9,13 @@ import (
 	"github.com/nilslice/protolock"
 )
 
-const usage = `Track your .proto files and prevent changes to messages and services which impact API compatibilty.
+const info = `Track your .proto files and prevent changes to messages and services which impact API compatibilty.
 
-Copyright: Steve Manuel <nilslice@gmail.com>
+Copyright Steve Manuel <nilslice@gmail.com>
 Released under the BSD-3-Clause license.
+`
 
+const usage = `
 Usage:
 	protolock <command> [options]
 
@@ -21,25 +23,27 @@ Commands:
 	-h, --help, help	display the usage information for protolock
 	init			initialize a proto.lock file from current tree
 	status			check for breaking changes and report conflicts
-	commit			overwrite proto.lock file with current tree
+	commit			rewrite proto.lock file with current tree if no conflicts (--force to override)
 
 Options:
 	--strict [true]		enable strict mode and enforce all built-in rules
 	--debug	[false]		enable debug mode and output debug messages
 	--ignore 		comma-separated list of filepaths to ignore
+	--force [false]		forces commit to rewrite proto.lock file and disregards warnings
 `
 
 var (
 	options = flag.NewFlagSet("options", flag.ExitOnError)
 	debug   = options.Bool("debug", false, "toggle debug mode for verbose output")
-	strict  = options.Bool("strict", true, "toggle strict mode, to determine which rules are enforced")
+	strict  = options.Bool("strict", true, "enable strict mode and enforce all built-in rules")
 	ignore  = options.String("ignore", "", "comma-separated list of filepaths to ignore")
+	force   = options.Bool("force", false, "force commit to rewrite proto.lock file and disregard warnings")
 )
 
 func main() {
 	// exit if no command (i.e. help, -h, --help, init, status, or commit)
 	if len(os.Args) < 2 {
-		fmt.Println(usage)
+		fmt.Println(info + usage)
 		os.Exit(0)
 	}
 
@@ -73,6 +77,19 @@ func main() {
 			os.Exit(1)
 		}
 
+		// if force option is false (default), then disallow commit if
+		// there are any warnings encountered by runing a status check.
+		if !*force {
+			report, err := protolock.Status(*ignore)
+			if err != nil {
+				handleReport(report, err)
+			}
+
+			if len(report.Warnings) > 0 {
+				os.Exit(1)
+			}
+		}
+
 		err = saveToLockFile(r)
 		if err != nil {
 			fmt.Println(err)
@@ -82,23 +99,27 @@ func main() {
 	case "status":
 		report, err := protolock.Status(*ignore)
 		if err != nil {
-			if len(report.Warnings) > 0 {
-				for _, w := range report.Warnings {
-					fmt.Fprintf(
-						os.Stdout,
-						"CONFLICT: %s [%s]\n",
-						w.Message, w.Filepath,
-					)
-				}
-				os.Exit(1)
-			}
-
-			fmt.Println(err)
+			handleReport(report, err)
 		}
 
 	default:
 		os.Exit(0)
 	}
+}
+
+func handleReport(report protolock.Report, err error) {
+	if len(report.Warnings) > 0 {
+		for _, w := range report.Warnings {
+			fmt.Fprintf(
+				os.Stdout,
+				"CONFLICT: %s [%s]\n",
+				w.Message, w.Filepath,
+			)
+		}
+		os.Exit(1)
+	}
+
+	fmt.Println(err)
 }
 
 func saveToLockFile(r io.Reader) error {
