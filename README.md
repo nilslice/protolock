@@ -21,19 +21,20 @@ go get -u github.com/nilslice/protolock/...
 Otherwise, download a pre-built binary for Windows, macOS, or Linux from the [latest release](https://github.com/nilslice/protolock/releases/latest) page.
 
 ## Usage
-```bash
+```
 protolock <command> [options]
 
 Commands:
 	-h, --help, help	display the usage information for protolock
 	init			initialize a proto.lock file from current tree
 	status			check for breaking changes and report conflicts
-	commit			overwrite proto.lock file with current tree
+	commit			rewrite proto.lock file with current tree if no conflicts (--force to override)
 
 Options:
 	--strict [true]		enable strict mode and enforce all built-in rules
 	--debug	[false]		enable debug mode and output debug messages
-        --ignore 		comma-separated list of filepaths to ignore
+	--ignore 		comma-separated list of filepaths to ignore
+	--force [false]		forces commit to rewrite proto.lock file and disregards warnings
 ```
 
 ## Overview
@@ -49,9 +50,10 @@ Options:
         CONFLICT: "Channel" is missing ID: 108, which had been reserved [path/to/file.proto]
         CONFLICT: "Channel" is missing ID: 109, which had been reserved [path/to/file.proto]
 
-2. **Commit** a new state of your .protos (overwrites `proto.lock`): 
+2. **Commit** a new state of your .protos (rewrites `proto.lock` if no warnings): 
 
         $ protolock commit
+        # optionally provide --force flag to disregard warnings
 
 4. **Integrate** into your protobuf compilation step: 
 
@@ -72,7 +74,7 @@ as part of the same message.
 Compares the current vs. updated Protolock definitions and will return a list of 
 warnings if any reserved field has been removed. 
 
-**Note:** This rule is only enforced when strict mode is enabled.
+**Note:** This rule is not enforced when strict mode is disabled. 
 
 
 #### No Changing Field IDs
@@ -89,7 +91,7 @@ warnings if any field type has been changed.
 Compares the current vs. updated Protolock definitions and will return a list of 
 warnings if any message's previous fields have been renamed. 
 
-**Note:** This rule is only enforced when strict mode is enabled. 
+**Note:** This rule is not enforced when strict mode is disabled. 
 
 #### No Removing Fields Without Reserve
 Compares the current vs. updated Protolock definitions and will return a list of 
@@ -100,7 +102,7 @@ that field name or ID.
 Compares the current vs. updated Protolock definitions and will return a list of 
 warnings if any RPCs provided by a Service have been removed. 
 
-**Note:** This rule is only enforced when strict mode is enabled. 
+**Note:** This rule is not enforced when strict mode is disabled. 
 
 #### No Changing RPC Signature
 Compares the current vs. updated Protolock definitions and will return a list of 
