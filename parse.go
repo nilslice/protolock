@@ -414,16 +414,19 @@ func getUpdatedLock(ignores string) (*Protolock, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer f.Close()
 
 		entry, err := parse(f)
 		if err != nil {
+			printIfErr(f.Close())
 			return nil, err
 		}
 
 		localPath := strings.TrimPrefix(path, root)
 		localPath = strings.TrimPrefix(localPath, string(filepath.Separator))
 		files[protoPath(protopath(localPath))] = entry
+
+		// manually close the file to prevent `too many open files` error
+		printIfErr(f.Close())
 	}
 
 	// add all the definitions from the updated set of protos to a Protolock
@@ -438,4 +441,10 @@ func getUpdatedLock(ignores string) (*Protolock, error) {
 	}
 
 	return &updated, nil
+}
+
+func printIfErr(err error) {
+	if err != nil {
+		fmt.Printf("protolock: %v\n", err)
+	}
 }
