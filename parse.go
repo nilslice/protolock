@@ -403,7 +403,6 @@ func getUpdatedLock(ignores string) (*Protolock, error) {
 	// files is a map of filepaths to string buffers to be joined into the
 	// proto.lock file.
 	var files []ProtoFile
-	// files := make(map[protopath]Entry)
 
 	root, err := os.Getwd()
 	if err != nil {
