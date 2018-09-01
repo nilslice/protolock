@@ -110,6 +110,13 @@ warnings if any RPC signature has been changed while using the same name.
 
 ---
 
+## Related Projects & Users
+
+- [Fanatics](https://github.com/fanatics)
+- [Maven Plugin](https://github.com/salesforce/proto-backwards-compat-maven-plugin) by [Salesforce](https://github.com/salesforce)
+
+---
+
 ## Contributing
 Please feel free to make pull requests with better support for various rules, 
 optimized code and overall tests. Filing an issue when you encounter a bug or
