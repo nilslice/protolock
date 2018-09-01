@@ -89,6 +89,11 @@ type Warning struct {
 	Message  string
 }
 
+type ProtoFile struct {
+	ProtoPath protopath
+	Entry     Entry
+}
+
 var (
 	enums []Enum
 	msgs  []Message
@@ -397,7 +402,8 @@ func getProtoFiles(root string, ignores string) ([]string, error) {
 func getUpdatedLock(ignores string) (*Protolock, error) {
 	// files is a map of filepaths to string buffers to be joined into the
 	// proto.lock file.
-	files := make(map[protopath]Entry)
+	var files []ProtoFile
+	// files := make(map[protopath]Entry)
 
 	root, err := os.Getwd()
 	if err != nil {
@@ -414,28 +420,41 @@ func getUpdatedLock(ignores string) (*Protolock, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer f.Close()
 
 		entry, err := parse(f)
 		if err != nil {
+			printIfErr(f.Close())
 			return nil, err
 		}
 
 		localPath := strings.TrimPrefix(path, root)
 		localPath = strings.TrimPrefix(localPath, string(filepath.Separator))
-		files[protoPath(protopath(localPath))] = entry
+		protoFile := ProtoFile{
+			ProtoPath: protoPath(protopath(localPath)),
+			Entry:     entry,
+		}
+		files = append(files, protoFile)
+
+		// manually close the file to prevent `too many open files` error
+		printIfErr(f.Close())
 	}
 
 	// add all the definitions from the updated set of protos to a Protolock
 	// used for analysis and comparison against the current Protolock, saved
 	// as the proto.lock file in the current directory
 	var updated Protolock
-	for fp, def := range files {
+	for _, file := range files {
 		updated.Definitions = append(updated.Definitions, Definition{
-			Filepath: protopath(fp),
-			Def:      def,
+			Filepath: file.ProtoPath,
+			Def:      file.Entry,
 		})
 	}
 
 	return &updated, nil
+}
+
+func printIfErr(err error) {
+	if err != nil {
+		fmt.Printf("protolock: %v\n", err)
+	}
 }
