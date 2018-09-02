@@ -89,6 +89,11 @@ type Warning struct {
 	Message  string
 }
 
+type ProtoFile struct {
+	ProtoPath protopath
+	Entry     Entry
+}
+
 var (
 	enums []Enum
 	msgs  []Message
@@ -397,7 +402,7 @@ func getProtoFiles(root string, ignores string) ([]string, error) {
 func getUpdatedLock(ignores string) (*Protolock, error) {
 	// files is a map of filepaths to string buffers to be joined into the
 	// proto.lock file.
-	files := make(map[protopath]Entry)
+	var files []ProtoFile
 
 	root, err := os.Getwd()
 	if err != nil {
@@ -423,7 +428,11 @@ func getUpdatedLock(ignores string) (*Protolock, error) {
 
 		localPath := strings.TrimPrefix(path, root)
 		localPath = strings.TrimPrefix(localPath, string(filepath.Separator))
-		files[protoPath(protopath(localPath))] = entry
+		protoFile := ProtoFile{
+			ProtoPath: protoPath(protopath(localPath)),
+			Entry:     entry,
+		}
+		files = append(files, protoFile)
 
 		// manually close the file to prevent `too many open files` error
 		printIfErr(f.Close())
@@ -433,10 +442,10 @@ func getUpdatedLock(ignores string) (*Protolock, error) {
 	// used for analysis and comparison against the current Protolock, saved
 	// as the proto.lock file in the current directory
 	var updated Protolock
-	for fp, def := range files {
+	for _, file := range files {
 		updated.Definitions = append(updated.Definitions, Definition{
-			Filepath: protopath(fp),
-			Def:      def,
+			Filepath: file.ProtoPath,
+			Def:      file.Entry,
 		})
 	}
 

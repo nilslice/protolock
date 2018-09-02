@@ -14,7 +14,7 @@ jobs:
       # install binary, test commands
       - run: go install ./...
       - run: protolock
-      - run: protolock init
+      - run: stat proto.lock
       - run: cat proto.lock | grep "testdata:/:test.proto"
       - run: protolock status
       - run: protolock commit
