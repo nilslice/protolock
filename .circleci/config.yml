@@ -8,6 +8,8 @@ jobs:
     working_directory: /go/src/github.com/nilslice/protolock
     steps:
       - checkout
+      # install goreleaser for automated releases
+      - run: curl -sL https://git.io/goreleaser | bash
       # fetch depenencies, test code
       - run: go get -v -t -d ./...
       - run: go test -v -race ./...
@@ -18,3 +20,14 @@ jobs:
       - run: cat proto.lock | grep "testdata:/:test.proto"
       - run: protolock status
       - run: protolock commit
+  
+workflows:
+  version: 2
+  release:
+    jobs:
+      - release:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
