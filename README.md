@@ -1,6 +1,6 @@
 # protolock
 
-Track your .proto files and prevent changes to messages and services which impact API compatibilty.
+Track your .proto files and prevent changes to messages and services which impact API compatibility.
 
 [![CircleCI](https://circleci.com/gh/nilslice/protolock/tree/master.svg?style=svg)](https://circleci.com/gh/nilslice/protolock/tree/master)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/nilslice/protolock)
