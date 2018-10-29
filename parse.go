@@ -12,7 +12,7 @@ import (
 	"sync"
 
 	"github.com/emicklei/proto"
-)
+	)
 
 const LockFileName = "proto.lock"
 
@@ -29,6 +29,7 @@ type Entry struct {
 	Enums    []Enum    `json:"enums,omitempty"`
 	Messages []Message `json:"messages,omitempty"`
 	Services []Service `json:"services,omitempty"`
+	Imports  []Import
 }
 
 type Message struct {
@@ -39,6 +40,11 @@ type Message struct {
 	ReservedNames []string  `json:"reserved_names,omitempty"`
 	Filepath      protopath `json:"filepath,omitempty"`
 	Messages      []Message `json:"messages,omitempty"`
+	Options       []Option
+}
+
+type Import struct {
+	Path string
 }
 
 type EnumField struct {
@@ -64,6 +70,12 @@ type Field struct {
 	Name       string `json:"name,omitempty"`
 	Type       string `json:"type,omitempty"`
 	IsRepeated bool   `json:"is_repeated,omitempty"`
+}
+
+type Option struct {
+	Name  string
+	Type  string
+	Value string
 }
 
 type Service struct {
@@ -98,6 +110,7 @@ var (
 	enums []Enum
 	msgs  []Message
 	svcs  []Service
+	imps  []Import
 )
 
 func parse(r io.Reader) (Entry, error) {
@@ -110,19 +123,38 @@ func parse(r io.Reader) (Entry, error) {
 	enums = []Enum{}
 	msgs = []Message{}
 	svcs = []Service{}
+	imps = []Import{}
 
 	proto.Walk(
 		def,
 		proto.WithEnum(withEnum),
 		proto.WithService(withService),
 		proto.WithMessage(withMessage),
+		WithImport(withImport),
 	)
 
 	return Entry{
 		Enums:    enums,
 		Messages: msgs,
 		Services: svcs,
+		Imports:  imps,
 	}, nil
+}
+
+func WithImport(apply func(p *proto.Import)) proto.Handler {
+	return func(v proto.Visitee) {
+		if s, ok := v.(*proto.Import); ok {
+			apply(s)
+		}
+	}
+}
+
+func withImport(im *proto.Import) {
+	imp := Import{
+		Path: im.Filename,
+	}
+
+	imps = append(imps, imp)
 }
 
 func withEnum(e *proto.Enum) {
@@ -291,6 +323,14 @@ func parseMessage(m *proto.Message) Message {
 
 			// add all reserved field names
 			msg.ReservedNames = append(msg.ReservedNames, r.FieldNames...)
+		}
+
+		if o, ok := v.(*proto.Option); ok {
+			msg.Options = append(msg.Options, Option{
+				Name: o.Name,
+				Value: o.Constant.Source,
+			})
+
 		}
 
 		if m, ok := v.(*proto.Message); ok {

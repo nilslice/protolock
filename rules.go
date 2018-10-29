@@ -2,7 +2,7 @@ package protolock
 
 import (
 	"fmt"
-)
+		)
 
 var (
 	// ruleFuncs provides a complete list of all funcs to be run to compare
@@ -12,6 +12,7 @@ var (
 		NoUsingReservedFields,
 		NoRemovingReservedFields,
 		NoRemovingFieldsWithoutReserve,
+		NoRemovingFieldsIfPersisted,
 		NoChangingFieldIDs,
 		NoChangingFieldTypes,
 		NoChangingFieldNames,
@@ -73,6 +74,8 @@ type lockIDsMap map[protopath]map[string]map[int]int
 						-> 	["field_three"] -> 	3
 */
 type lockNamesMap map[protopath]map[string]map[string]int
+
+type importMap map[protopath]map[string]bool
 
 // lockFieldMap:
 // table of filepath -> message name -> field name -> field type
@@ -146,6 +149,107 @@ func incEnumFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filep
 		}
 	}
 }
+
+func NoRemovingFieldsIfPersisted(cur, upd Protolock) ([]Warning, bool) {
+	var warnings []Warning
+
+	// check all message fields
+	curFieldMap := getFieldMap(cur)
+	updFieldMap := getFieldMap(upd)
+	// filepath -> message name
+	persistedMessages := findPersistedMessages(&cur, curFieldMap)
+
+	for filepath, messageMap := range curFieldMap {
+		if _, ok := persistedMessages[filepath]; !ok {
+			continue
+		}
+		for messageName, fieldMap := range messageMap {
+			// Check if the message is persisted
+			if _, ok := persistedMessages[filepath][messageName]; !ok {
+				continue
+			}
+
+			// Check if the message is removed
+			if _, ok := updFieldMap[filepath]; !ok {
+				msg := fmt.Sprintf("A persisted Message is removed. Message: %s", messageName)
+				warning := Warning{
+					Filepath: filepath,
+					Message:  msg,
+				}
+				warnings = append(warnings, warning)
+				continue
+			}
+
+			// Compare if there is any field removed
+			for fieldName := range fieldMap {
+				if _, ok := updFieldMap[filepath][messageName][fieldName]; !ok {
+					msg := fmt.Sprintf("A field in a persisted Message is removed. " +
+						"Message: %s, Field: %s", messageName, fieldName)
+					warning := Warning{Filepath: filepath, Message: msg}
+					warnings = append(warnings, warning)
+				}
+			}
+		}
+	}
+
+	if warnings != nil {
+		return warnings, false
+	}
+
+	return warnings, true
+}
+
+
+func traverseAndAddDependencies(rootPersistedMessages map[protopath]map[string]bool, curFieldMap lockFieldMap, persistedMessages map[protopath]map[string]bool) {
+	if len(rootPersistedMessages) == 0 {
+		return
+	}
+
+	childPersistedMessages := make(map[protopath]map[string]bool)
+	for protopath, messageMap := range rootPersistedMessages {
+		if _, ok := persistedMessages[protopath]; !ok {
+			persistedMessages[protopath] = make(map[string]bool)
+		}
+		for messageName := range messageMap {
+
+			persistedMessages[protopath][messageName] = true
+
+			for _, field := range curFieldMap[protopath][messageName] {
+				// Check if the child is in current protopath
+				childPersistedMessages[protopath] = make(map[string]bool)
+				for messageName := range curFieldMap[protopath] {
+					if messageName == field.Type {
+						childPersistedMessages[protopath][messageName] = true
+					}
+				}
+				// TODO: will also need to check messages from import protopath
+			}
+		}
+	}
+	traverseAndAddDependencies(childPersistedMessages, curFieldMap, persistedMessages)
+}
+
+// Returns map[protopath][messageName]
+func findPersistedMessages(protolock *Protolock, curFieldMap lockFieldMap) map[protopath]map[string]bool {
+	// Find root-level messages that are annotated with persisted
+	rootPersistedMessages := make(map[protopath]map[string]bool)
+	for _, def := range protolock.Definitions {
+		rootPersistedMessages[def.Filepath] = make(map[string]bool)
+		for _, message := range def.Def.Messages {
+			for _, option := range message.Options {
+				if option.Name == "(persisted)" {
+					rootPersistedMessages[def.Filepath][message.Name] = true
+				}
+			}
+		}
+	}
+
+	persistedMessages := make(map[protopath]map[string]bool)
+	traverseAndAddDependencies(rootPersistedMessages, curFieldMap, persistedMessages)
+
+	return persistedMessages
+}
+
 
 // NoUsingReservedFields compares the current vs. updated Protolock definitions
 // and will return a list of warnings if any message's previously reserved fields
