@@ -1,8 +1,8 @@
 package protolock
 
 import (
-	"os"
 	"errors"
+	"os"
 )
 
 // Status will report on any issues encountered when comparing the updated tree
