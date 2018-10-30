@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package child;
+
+message User {
+    int64 id = 1;
+
+}

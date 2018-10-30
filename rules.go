@@ -2,7 +2,8 @@ package protolock
 
 import (
 	"fmt"
-		)
+	"strings"
+)
 
 var (
 	// ruleFuncs provides a complete list of all funcs to be run to compare
@@ -75,7 +76,7 @@ type lockIDsMap map[protopath]map[string]map[int]int
 */
 type lockNamesMap map[protopath]map[string]map[string]int
 
-type importMap map[protopath]map[string]bool
+type importMap map[protopath][]protopath
 
 // lockFieldMap:
 // table of filepath -> message name -> field name -> field type
@@ -153,11 +154,20 @@ func incEnumFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filep
 func NoRemovingFieldsIfPersisted(cur, upd Protolock) ([]Warning, bool) {
 	var warnings []Warning
 
+	importMap := make(importMap)
+	for _, def := range cur.Definitions {
+		var imports []protopath
+		for _, imp := range def.Def.Imports {
+			imports = append(imports, protoPath(protopath(imp.Path)))
+		}
+		importMap[def.Filepath] = imports
+	}
+
 	// check all message fields
 	curFieldMap := getFieldMap(cur)
 	updFieldMap := getFieldMap(upd)
 	// filepath -> message name
-	persistedMessages := findPersistedMessages(&cur, curFieldMap)
+	persistedMessages := findPersistedMessages(&cur, curFieldMap, importMap)
 
 	for filepath, messageMap := range curFieldMap {
 		if _, ok := persistedMessages[filepath]; !ok {
@@ -200,7 +210,8 @@ func NoRemovingFieldsIfPersisted(cur, upd Protolock) ([]Warning, bool) {
 }
 
 
-func traverseAndAddDependencies(rootPersistedMessages map[protopath]map[string]bool, curFieldMap lockFieldMap, persistedMessages map[protopath]map[string]bool) {
+func traverseAndAddDependencies(rootPersistedMessages map[protopath]map[string]bool, curFieldMap lockFieldMap,
+	persistedMessages map[protopath]map[string]bool, importMap importMap) {
 	if len(rootPersistedMessages) == 0 {
 		return
 	}
@@ -217,20 +228,36 @@ func traverseAndAddDependencies(rootPersistedMessages map[protopath]map[string]b
 			for _, field := range curFieldMap[protopath][messageName] {
 				// Check if the child is in current protopath
 				childPersistedMessages[protopath] = make(map[string]bool)
-				for messageName := range curFieldMap[protopath] {
-					if messageName == field.Type {
-						childPersistedMessages[protopath][messageName] = true
+				for candidateMessageName := range curFieldMap[protopath] {
+					if candidateMessageName == field.Type {
+						childPersistedMessages[protopath][candidateMessageName] = true
 					}
 				}
-				// TODO: will also need to check messages from import protopath
+
+				// Check if the child is in the imported protopath
+				if !strings.Contains(field.Type, ".") {
+					continue
+				}
+				for _, importFilepath := range importMap[protopath] {
+					for candidateMessageName := range curFieldMap[importFilepath] {
+
+						if candidateMessageName == strings.Split(field.Type, ".")[1] {
+							if _, ok := childPersistedMessages[importFilepath]; !ok {
+								childPersistedMessages[importFilepath] = make(map[string]bool)
+							}
+
+							childPersistedMessages[importFilepath][candidateMessageName] = true
+						}
+					}
+				}
 			}
 		}
 	}
-	traverseAndAddDependencies(childPersistedMessages, curFieldMap, persistedMessages)
+	traverseAndAddDependencies(childPersistedMessages, curFieldMap, persistedMessages, importMap)
 }
 
 // Returns map[protopath][messageName]
-func findPersistedMessages(protolock *Protolock, curFieldMap lockFieldMap) map[protopath]map[string]bool {
+func findPersistedMessages(protolock *Protolock, curFieldMap lockFieldMap, importMap importMap) map[protopath]map[string]bool {
 	// Find root-level messages that are annotated with persisted
 	rootPersistedMessages := make(map[protopath]map[string]bool)
 	for _, def := range protolock.Definitions {
@@ -245,7 +272,7 @@ func findPersistedMessages(protolock *Protolock, curFieldMap lockFieldMap) map[p
 	}
 
 	persistedMessages := make(map[protopath]map[string]bool)
-	traverseAndAddDependencies(rootPersistedMessages, curFieldMap, persistedMessages)
+	traverseAndAddDependencies(rootPersistedMessages, curFieldMap, persistedMessages, importMap)
 
 	return persistedMessages
 }

@@ -1,5 +1,13 @@
 syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+import "testdata/child.proto";
+
 package dataset;
+
+extend google.protobuf.MessageOptions {
+  optional bool persisted = 51234;
+}
 
 message Channel {
   reserved 6, 8 to 11;
@@ -12,6 +20,13 @@ message Channel {
   message A { int32 id = 1; }
 
   A msg = 44;
+}
+
+message TestAnnotation {
+  option (persisted) = true;
+  int64 id = 1;
+  Channel channel = 2;
+  child.User user = 3;
 }
 
 message Display {
@@ -62,7 +77,3 @@ message PreviousRequest {
   }
 }
 
-service ChannelChanger {
-  rpc Next(stream NextRequest) returns (Channel);
-  rpc Previous(PreviousRequest) returns (stream Channel);
-}
