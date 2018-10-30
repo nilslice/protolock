@@ -331,7 +331,7 @@ func protolockFromReader(r io.Reader) (Protolock, error) {
 // compare returns a Report struct and an error which indicates that there is
 // one or more warnings to report to the caller. If no error is returned, the
 // Report can be ignored.
-func compare(current, update Protolock) (Report, error) {
+func compare(current, update Protolock, ruleFuncs []RuleFunc) (Report, error) {
 	var warnings []Warning
 	var wg sync.WaitGroup
 	for _, fn := range ruleFuncs {

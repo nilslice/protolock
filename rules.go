@@ -5,10 +5,10 @@ import (
 )
 
 var (
-	// ruleFuncs provides a complete list of all funcs to be run to compare
+	// predefinedRuleFuncs provides a complete list of all funcs to be run to compare
 	// a set of Protolocks. This list should be updated as new RuleFunc's
 	// are added to this package.
-	ruleFuncs = []RuleFunc{
+	predefinedRuleFuncs = []RuleFunc{
 		NoUsingReservedFields,
 		NoRemovingReservedFields,
 		NoRemovingFieldsWithoutReserve,
