@@ -36,7 +36,7 @@ Options:
 	--debug	[false]		enable debug mode and output debug messages
 	--ignore 		comma-separated list of filepaths to ignore
 	--force [false]		forces commit to rewrite proto.lock file and disregards warnings
-	--plugins			comma-separated list of executable protolock plugin names
+	--plugins 		comma-separated list of executable protolock plugin names
 `
 
 var (
