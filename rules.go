@@ -53,7 +53,7 @@ type RuleFunc func(current, updated Protolock) ([]Warning, bool)
 				       [2] -> 1
 				       [3] -> 1
 */
-type lockIDsMap map[protopath]map[string]map[int]int
+type lockIDsMap map[Protopath]map[string]map[int]int
 
 // lockNamesMap:
 // table of filepath -> message name -> field name -> times name encountered (or the field ID)
@@ -72,29 +72,29 @@ type lockIDsMap map[protopath]map[string]map[int]int
 						-> 	["field_two"] 	-> 	2
 						-> 	["field_three"] -> 	3
 */
-type lockNamesMap map[protopath]map[string]map[string]int
+type lockNamesMap map[Protopath]map[string]map[string]int
 
 // lockFieldMap:
 // table of filepath -> message name -> field name -> field type
-type lockFieldMap map[protopath]map[string]map[string]Field
+type lockFieldMap map[Protopath]map[string]map[string]Field
 
 // lockEnumFieldMap:
 // table of filepath -> message name -> field name -> enum field type
-type lockEnumFieldMap map[protopath]map[string]map[string]EnumField
+type lockEnumFieldMap map[Protopath]map[string]map[string]EnumField
 
 // lockMapMap:
 // table of filepath -> message name -> Map name -> Map type
-type lockMapMap map[protopath]map[string]map[string]Map
+type lockMapMap map[Protopath]map[string]map[string]Map
 
 // lockRPCMap:
 // table of filepath -> service name -> rpc name -> rpc type
-type lockRPCMap map[protopath]map[string]map[string]RPC
+type lockRPCMap map[Protopath]map[string]map[string]RPC
 
 // lockFieldIDNameMap:
 // table of filepath -> message name -> field ID -> field name
-type lockFieldIDNameMap map[protopath]map[string]map[int]string
+type lockFieldIDNameMap map[Protopath]map[string]map[int]string
 
-func incMessageFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath protopath, prefix string, msg Message) {
+func incMessageFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath Protopath, prefix string, msg Message) {
 	name := prefix + msg.Name
 	for _, field := range msg.Fields {
 		if reservedIDMap[filepath][name] == nil {
@@ -125,7 +125,7 @@ func incMessageFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, fi
 	}
 }
 
-func incEnumFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath protopath, enum Enum) {
+func incEnumFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath Protopath, enum Enum) {
 	for _, field := range enum.EnumFields {
 		if reservedIDMap[filepath][enum.Name] == nil {
 			reservedIDMap[filepath][enum.Name] = make(map[int]int)
@@ -204,7 +204,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, id,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -223,7 +223,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, name,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -245,7 +245,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						enumName, id,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -264,7 +264,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						enumName, name,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -311,7 +311,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, id,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -327,7 +327,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, name,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -347,7 +347,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						enumName, id,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -363,7 +363,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						enumName, name,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -408,7 +408,7 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updFieldID, fieldID,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -434,7 +434,7 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 							enumName, fieldName, updFieldInteger, fieldInteger,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -479,7 +479,7 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updField.Type, field.Type,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -490,7 +490,7 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updField.IsRepeated, field.IsRepeated,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -512,7 +512,7 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updMap.KeyType, mp.KeyType,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -563,7 +563,7 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 							msgName, updFieldName, fieldID, fieldName,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -589,7 +589,7 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 							enumName, updFieldName, fieldInteger, fieldName,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -637,7 +637,7 @@ func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -692,7 +692,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 							msgName, field.Name,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -709,7 +709,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 							msgName, field.ID,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -744,7 +744,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 							enumName, field.Name,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -761,7 +761,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 							enumName, field.Integer,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: osPath(path),
+							Filepath: OSPath(path),
 							Message:  msg,
 						})
 					}
@@ -810,7 +810,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.InStreamed,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -821,7 +821,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.OutStreamed,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -832,7 +832,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.InType,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -843,7 +843,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.OutType,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: osPath(path),
+						Filepath: OSPath(path),
 						Message:  msg,
 					})
 				}
@@ -862,7 +862,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 	return nil, true
 }
 
-func getReservedFieldsRecursive(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath protopath, prefix string, msg Message) {
+func getReservedFieldsRecursive(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath Protopath, prefix string, msg Message) {
 	msgName := prefix + msg.Name
 	for _, id := range msg.ReservedIDs {
 		if reservedIDMap[filepath][msgName] == nil {

@@ -10,15 +10,15 @@ import (
 var osp = filepath.Join("testdata", "test.proto")
 
 func TestOSPathToProtoPath(t *testing.T) {
-	path := protopath(osp)
-	p := protoPath(path)
+	path := Protopath(osp)
+	p := ProtoPath(path)
 	assert.Equal(t, "testdata:/:test.proto", string(p))
-	assert.Equal(t, protopath("testdata:/:test.proto"), p)
+	assert.Equal(t, Protopath("testdata:/:test.proto"), p)
 }
 
 func TestProtoPathToOSPath(t *testing.T) {
-	path := protopath("testdata:/:test.proto")
-	p := osPath(path)
-	assert.Equal(t, protopath(osp), p)
+	path := Protopath("testdata:/:test.proto")
+	p := OSPath(path)
+	assert.Equal(t, Protopath(osp), p)
 	assert.Equal(t, osp, string(p))
 }

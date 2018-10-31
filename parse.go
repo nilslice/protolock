@@ -21,7 +21,7 @@ type Protolock struct {
 }
 
 type Definition struct {
-	Filepath protopath `json:"protopath,omitempty"`
+	Filepath Protopath `json:"Protopath,omitempty"`
 	Def      Entry     `json:"def,omitempty"`
 }
 
@@ -47,7 +47,7 @@ type Message struct {
 	Maps          []Map     `json:"maps,omitempty"`
 	ReservedIDs   []int     `json:"reserved_ids,omitempty"`
 	ReservedNames []string  `json:"reserved_names,omitempty"`
-	Filepath      protopath `json:"filepath,omitempty"`
+	Filepath      Protopath `json:"filepath,omitempty"`
 	Messages      []Message `json:"messages,omitempty"`
 	Options       []Option  `json:"options,omitempty"`
 }
@@ -80,7 +80,7 @@ type Field struct {
 type Service struct {
 	Name     string    `json:"name,omitempty"`
 	RPCs     []RPC     `json:"rpcs,omitempty"`
-	Filepath protopath `json:"filepath,omitempty"`
+	Filepath Protopath `json:"filepath,omitempty"`
 }
 
 type RPC struct {
@@ -92,16 +92,17 @@ type RPC struct {
 }
 
 type Report struct {
-	Warnings []Warning
+	Current, Updated Protolock
+	Warnings         []Warning
 }
 
 type Warning struct {
-	Filepath protopath
+	Filepath Protopath
 	Message  string
 }
 
 type ProtoFile struct {
-	ProtoPath protopath
+	ProtoPath Protopath
 	Entry     Entry
 }
 
@@ -110,6 +111,8 @@ var (
 	msgs  []Message
 	svcs  []Service
 	imps  []Import
+
+	ErrWarningsFound = errors.New("comparison found one or more warnings")
 )
 
 func parse(r io.Reader) (Entry, error) {
@@ -368,9 +371,13 @@ func protolockFromReader(r io.Reader) (Protolock, error) {
 // compare returns a Report struct and an error which indicates that there is
 // one or more warnings to report to the caller. If no error is returned, the
 // Report can be ignored.
-func compare(current, update Protolock) (Report, error) {
+func compare(current, update Protolock) (*Report, error) {
 	var warnings []Warning
 	var wg sync.WaitGroup
+	report := &Report{
+		Current: current,
+		Updated: update,
+	}
 	for _, fn := range ruleFuncs {
 		wg.Add(1)
 		go func() {
@@ -381,13 +388,13 @@ func compare(current, update Protolock) (Report, error) {
 		}()
 		wg.Wait()
 	}
+	report.Warnings = warnings
 
-	if len(warnings) != 0 {
-		err := errors.New("comparison found one or more warnings")
-		return Report{Warnings: warnings}, err
+	if len(report.Warnings) != 0 {
+		return report, ErrWarningsFound
 	}
 
-	return Report{}, nil
+	return report, nil
 }
 
 // getProtoFiles finds recursively all .proto files to be processed.
@@ -465,7 +472,7 @@ func getUpdatedLock(ignores string) (*Protolock, error) {
 		localPath := strings.TrimPrefix(path, root)
 		localPath = strings.TrimPrefix(localPath, string(filepath.Separator))
 		protoFile := ProtoFile{
-			ProtoPath: protoPath(protopath(localPath)),
+			ProtoPath: ProtoPath(Protopath(localPath)),
 			Entry:     entry,
 		}
 		files = append(files, protoFile)
