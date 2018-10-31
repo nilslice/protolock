@@ -9,7 +9,52 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const protoWithImports = `
+syntax = "proto3";
+
+import "testdata/test.proto"
+
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+`
+
+const protoWithOptions = `
+syntax = "proto3";
+
+package test;
+
+message Channel {
+  option (ext.persisted) = true
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+`
+
 var gpfPath = filepath.Join("testdata", "getProtoFiles")
+
+
+func TestParseIncludingImports(t *testing.T) {
+	r := strings.NewReader(protoWithImports)
+
+	entry, _ := parse(r)
+
+	assert.Equal(t, "testdata/test.proto", entry.Imports[0].Path)
+}
+
+func TestParseIncludingOptions(t *testing.T) {
+	r := strings.NewReader(protoWithOptions)
+
+	entry, _ := parse(r)
+
+	assert.Equal(t, "(ext.persisted)", entry.Messages[0].Options[0].Name)
+	assert.Equal(t, "true", entry.Messages[0].Options[0].Value)
+}
 
 func TestGetProtoFilesFiltersDirectories(t *testing.T) {
 	files, err := getProtoFiles(gpfPath, "")
