@@ -12,10 +12,10 @@ import (
 
 // Data contains the current and updated Protolock structs created by the
 // `protolock` internal parser and deserializer, and a slice of Warning structs
-// from the initial `protolock status`, and subsequent plugin invocations.
+// for the plugin to append its own custom warnings.
 type Data struct {
 	Current, Updated protolock.Protolock
-	ExistingWarnings []protolock.Warning
+	PluginWarnings   []protolock.Warning
 }
 
 // PluginFunc is a function which defines plugin behavior, and is provided a

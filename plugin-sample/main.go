@@ -9,7 +9,7 @@ func main() {
 	plugin := extend.NewPlugin("sample") // "sample" is arbitrary name used to correlate error messages
 	plugin.Init(func(data *extend.Data) (*extend.Data, error) {
 		warnings := AddWarningsForExample(data.Current, data.Updated)
-		data.ExistingWarnings = append(data.ExistingWarnings, warnings...)
+		data.PluginWarnings = append(data.PluginWarnings, warnings...)
 		return data, nil
 	})
 }
