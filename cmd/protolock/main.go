@@ -1,12 +1,17 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/nilslice/protolock"
+	"github.com/nilslice/protolock/extend"
 )
 
 const info = `Track your .proto files and prevent changes to messages and services which impact API compatibilty.
@@ -30,6 +35,7 @@ Options:
 	--debug	[false]		enable debug mode and output debug messages
 	--ignore 		comma-separated list of filepaths to ignore
 	--force [false]		forces commit to rewrite proto.lock file and disregards warnings
+	--plugins			comma-separated list of executable protolock plugin names
 `
 
 var (
@@ -38,6 +44,7 @@ var (
 	strict  = options.Bool("strict", true, "enable strict mode and enforce all built-in rules")
 	ignore  = options.String("ignore", "", "comma-separated list of filepaths to ignore")
 	force   = options.Bool("force", false, "force commit to rewrite proto.lock file and disregard warnings")
+	plugins = options.String("plugins", "", "comma-separated list of executable protolock plugin names")
 )
 
 func main() {
@@ -98,16 +105,85 @@ func main() {
 
 	case "status":
 		report, err := protolock.Status(*ignore)
-		if err != nil {
-			handleReport(report, err)
+		if err != protolock.ErrWarningsFound && err != nil {
+			fmt.Println("[protolock]:", err)
+			os.Exit(1)
 		}
+
+		// if plugins are provided, attempt to execute each as a binary located
+		// in the user's OS executable filepath using exec.LookPath
+		if *plugins != "" {
+			report, err = runPlugins(*plugins, report)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+		handleReport(report, err)
 
 	default:
 		os.Exit(0)
 	}
 }
 
-func handleReport(report protolock.Report, err error) {
+func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report, error) {
+	inputData := &bytes.Buffer{}
+
+	err := json.NewEncoder(inputData).Encode(&extend.Data{
+		Current:          report.Current,
+		Updated:          report.Updated,
+		ExistingWarnings: report.Warnings,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	plugins := strings.Split(pluginList, ",")
+	for i, name := range plugins {
+		name = strings.TrimSpace(name)
+		path, err := exec.LookPath(name)
+		if err != nil {
+			return wrapPluginErr(path, err)
+		}
+
+		plugin := &exec.Cmd{
+			Path:  path,
+			Stdin: inputData,
+		}
+
+		// execute the plugin and capture the output
+		output, err := plugin.Output()
+		if err != nil {
+			return wrapPluginErr(path, err)
+		}
+
+		// reset inputData before writing the output to it from previously
+		// executed plugin
+		inputData.Reset()
+
+		// if this is not the last plugin to execute, save the output of the
+		// previous plugin to be passed into the next plugin
+		if i != len(plugins)-1 {
+			_, err := inputData.Write(output)
+			if err != nil {
+				return wrapPluginErr(path, err)
+			}
+		} else {
+			pluginData := &extend.Data{}
+			err = json.Unmarshal(output, pluginData)
+			if err != nil {
+				return nil, err
+			}
+
+			report.Warnings = pluginData.ExistingWarnings
+		}
+	}
+
+	return report, nil
+}
+
+func handleReport(report *protolock.Report, err error) {
 	if len(report.Warnings) > 0 {
 		for _, w := range report.Warnings {
 			fmt.Fprintf(
@@ -119,7 +195,9 @@ func handleReport(report protolock.Report, err error) {
 		os.Exit(1)
 	}
 
-	fmt.Println(err)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func saveToLockFile(r io.Reader) error {
@@ -135,4 +213,8 @@ func saveToLockFile(r io.Reader) error {
 	}
 
 	return nil
+}
+
+func wrapPluginErr(path string, err error) (*protolock.Report, error) {
+	return nil, fmt.Errorf("[protolock:plugin] %v (%s)", err, path)
 }
