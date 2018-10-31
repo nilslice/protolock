@@ -29,6 +29,16 @@ type Entry struct {
 	Enums    []Enum    `json:"enums,omitempty"`
 	Messages []Message `json:"messages,omitempty"`
 	Services []Service `json:"services,omitempty"`
+	Imports  []Import  `json:"imports,omitempty"`
+}
+
+type Import struct {
+	Path string `json:"path,omitempty"`
+}
+
+type Option struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 type Message struct {
@@ -39,6 +49,7 @@ type Message struct {
 	ReservedNames []string  `json:"reserved_names,omitempty"`
 	Filepath      protopath `json:"filepath,omitempty"`
 	Messages      []Message `json:"messages,omitempty"`
+	Options       []Option  `json:"options,omitempty"`
 }
 
 type EnumField struct {
@@ -98,6 +109,7 @@ var (
 	enums []Enum
 	msgs  []Message
 	svcs  []Service
+	imps  []Import
 )
 
 func parse(r io.Reader) (Entry, error) {
@@ -110,18 +122,21 @@ func parse(r io.Reader) (Entry, error) {
 	enums = []Enum{}
 	msgs = []Message{}
 	svcs = []Service{}
+	imps = []Import{}
 
 	proto.Walk(
 		def,
 		proto.WithEnum(withEnum),
 		proto.WithService(withService),
 		proto.WithMessage(withMessage),
+		protoWithImport(withImport),
 	)
 
 	return Entry{
 		Enums:    enums,
 		Messages: msgs,
 		Services: svcs,
+		Imports:  imps,
 	}, nil
 }
 
@@ -293,12 +308,34 @@ func parseMessage(m *proto.Message) Message {
 			msg.ReservedNames = append(msg.ReservedNames, r.FieldNames...)
 		}
 
+		if o, ok := v.(*proto.Option); ok {
+			msg.Options = append(msg.Options, Option{
+				Name: o.Name,
+				Value: o.Constant.Source,
+			})
+		}
+
 		if m, ok := v.(*proto.Message); ok {
 			msg.Messages = append(msg.Messages, parseMessage(m))
 		}
 	}
 
 	return msg
+}
+
+func protoWithImport(apply func(p *proto.Import)) proto.Handler {
+	return func(v proto.Visitee) {
+		if s, ok := v.(*proto.Import); ok {
+			apply(s)
+		}
+	}
+}
+
+func withImport(im *proto.Import) {
+	imp := Import{
+		Path: im.Filename,
+	}
+	imps = append(imps, imp)
 }
 
 // openLockFile opens and returns the lock file on disk for reading.
