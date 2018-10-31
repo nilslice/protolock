@@ -1,18 +1,12 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
-	"strings"
-	"sync"
 
 	"github.com/nilslice/protolock"
-	"github.com/nilslice/protolock/extend"
 )
 
 const info = `Track your .proto files and prevent changes to messages and services which impact API compatibilty.
@@ -111,8 +105,9 @@ func main() {
 			os.Exit(1)
 		}
 
-		// if plugins are provided, attempt to execute each as a binary located
-		// in the user's OS executable filepath using exec.LookPath
+		// if plugins are provided, attempt to execute each as a exeutable
+		// located in the user's OS executable path as reported by stdlib's
+		// exec.LookPath func
 		if *plugins != "" {
 			report, err = runPlugins(*plugins, report)
 			if err != nil {
@@ -126,87 +121,6 @@ func main() {
 	default:
 		os.Exit(0)
 	}
-}
-
-func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report, error) {
-	inputData := &bytes.Buffer{}
-
-	err := json.NewEncoder(inputData).Encode(&extend.Data{
-		Current:        report.Current,
-		Updated:        report.Updated,
-		PluginWarnings: []protolock.Warning{},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// collect plugin warnings and errors as they are returned from plugins
-	pluginWarningsChan := make(chan []protolock.Warning)
-	pluginsDone := make(chan struct{})
-	pluginErrsChan := make(chan error)
-	var allPluginErrors []error
-	go func() {
-		for {
-			select {
-			case <-pluginsDone:
-				break
-
-			case err := <-pluginErrsChan:
-				if err != nil {
-					allPluginErrors = append(allPluginErrors, err)
-				}
-
-			case warnings := <-pluginWarningsChan:
-				for _, warning := range warnings {
-					report.Warnings = append(report.Warnings, warning)
-				}
-			}
-		}
-	}()
-
-	wg := &sync.WaitGroup{}
-	plugins := strings.Split(pluginList, ",")
-	for _, name := range plugins {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-			name = strings.TrimSpace(name)
-			path, err := exec.LookPath(name)
-			if err != nil {
-				pluginErrsChan <- wrapPluginErr(path, err)
-				return
-			}
-
-			plugin := &exec.Cmd{
-				Path:  path,
-				Stdin: inputData,
-			}
-
-			// execute the plugin and capture the output
-			output, err := plugin.Output()
-			if err != nil {
-				pluginErrsChan <- wrapPluginErr(path, err)
-				return
-			}
-
-			pluginData := &extend.Data{}
-			err = json.Unmarshal(output, pluginData)
-			if err != nil {
-				pluginErrsChan <- err
-				return
-			}
-
-			if pluginData.PluginWarnings != nil {
-				pluginWarningsChan <- pluginData.PluginWarnings
-			}
-		}()
-	}
-
-	wg.Wait()
-	pluginsDone <- struct{}{}
-
-	return report, nil
 }
 
 func handleReport(report *protolock.Report, err error) {
@@ -239,8 +153,4 @@ func saveToLockFile(r io.Reader) error {
 	}
 
 	return nil
-}
-
-func wrapPluginErr(path string, err error) error {
-	return fmt.Errorf("[protolock:plugin] %v (%s)", err, path)
 }

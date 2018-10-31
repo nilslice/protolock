@@ -23,7 +23,7 @@ function build() {
 
   tmpDir="${pkgDir}/tmp/${os}_${arch}"
   mkdir -p "${tmpDir}"
-  GOOS="${os}" GOARCH="${arch}" go build -o "${tmpDir}/${name}" cmd/protolock/main.go
+  GOOS="${os}" GOARCH="${arch}" go build -o "${tmpDir}/${name}" cmd/protolock/*.go
   (
     cd "${tmpDir}"
 

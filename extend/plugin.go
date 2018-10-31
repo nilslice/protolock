@@ -14,13 +14,14 @@ import (
 // `protolock` internal parser and deserializer, and a slice of Warning structs
 // for the plugin to append its own custom warnings.
 type Data struct {
-	Current, Updated protolock.Protolock
-	PluginWarnings   []protolock.Warning
+	Current, Updated   protolock.Protolock
+	PluginWarnings     []protolock.Warning
+	PluginErrorMessage string
 }
 
 // PluginFunc is a function which defines plugin behavior, and is provided a
 // pointer to Data.
-type PluginFunc func(d *Data) (*Data, error)
+type PluginFunc func(d *Data) *Data
 
 type plugin struct {
 	name string
@@ -41,6 +42,7 @@ func (p *plugin) Init(fn PluginFunc) {
 	_, err := io.Copy(input, os.Stdin)
 	if err != nil {
 		p.wrapErrAndLog(err)
+		return
 	}
 
 	// deserialize bytes into *Data
@@ -48,23 +50,22 @@ func (p *plugin) Init(fn PluginFunc) {
 	err = json.Unmarshal(input.Bytes(), inputData)
 	if err != nil {
 		p.wrapErrAndLog(err)
+		return
 	}
 
 	// execute "fn" and pass it the *Data, where the plugin would read and
 	// compare the current and updated Protolock values and append custom
 	// Warnings for their own defined rules
-	outputData, err := fn(inputData)
-	if err != nil {
-		p.wrapErrAndLog(err)
-	}
+	outputData := fn(inputData)
 	outputData.Current = inputData.Current
 	outputData.Updated = inputData.Updated
 
 	// serialize *Data back and write to stdout
 	p.wrapErrAndLog(json.NewEncoder(os.Stdout).Encode(outputData))
-
 }
 
 func (p *plugin) wrapErrAndLog(err error) {
-	fmt.Fprintf(os.Stderr, "[protolock:plugin] %s: %v", p.name, err)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "[protolock:plugin] %s: %v", p.name, err)
+	}
 }

@@ -7,16 +7,17 @@ import (
 
 func main() {
 	plugin := extend.NewPlugin("sample") // "sample" is arbitrary name used to correlate error messages
-	plugin.Init(func(data *extend.Data) (*extend.Data, error) {
+	plugin.Init(func(data *extend.Data) *extend.Data {
 		warnings := AddWarningsForExample(data.Current, data.Updated)
 		data.PluginWarnings = append(data.PluginWarnings, warnings...)
-		return data, nil
+		data.PluginErrorMessage = "some error"
+		return data
 	})
 }
 
 func AddWarningsForExample(cur, upd protolock.Protolock) []protolock.Warning {
 	return []protolock.Warning{
-		{Filepath: protolock.Protopath(""), Message: "A sample warning!"},
-		{Filepath: protolock.Protopath(""), Message: "Another sample warning.. ah!"},
+		{Filepath: protolock.OSPath(upd.Definitions[0].Filepath), Message: "A sample warning!"},
+		{Filepath: protolock.OSPath(upd.Definitions[0].Filepath), Message: "Another sample warning.. ah!"},
 	}
 }
