@@ -1,7 +1,7 @@
 {
   "definitions": [
     {
-      "Protopath": "testdata:/:getProtoFiles:/:exclude:/:test.proto",
+      "protopath": "testdata:/:getProtoFiles:/:exclude:/:test.proto",
       "def": {
         "messages": [
           {
@@ -18,7 +18,7 @@
       }
     },
     {
-      "Protopath": "testdata:/:getProtoFiles:/:exclude.proto",
+      "protopath": "testdata:/:getProtoFiles:/:exclude.proto",
       "def": {
         "messages": [
           {
@@ -35,7 +35,7 @@
       }
     },
     {
-      "Protopath": "testdata:/:getProtoFiles:/:include:/:exclude.proto",
+      "protopath": "testdata:/:getProtoFiles:/:include:/:exclude.proto",
       "def": {
         "messages": [
           {
@@ -52,7 +52,7 @@
       }
     },
     {
-      "Protopath": "testdata:/:getProtoFiles:/:include:/:include.proto",
+      "protopath": "testdata:/:getProtoFiles:/:include:/:include.proto",
       "def": {
         "messages": [
           {

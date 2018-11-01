@@ -21,7 +21,7 @@ type Protolock struct {
 }
 
 type Definition struct {
-	Filepath Protopath `json:"Protopath,omitempty"`
+	Filepath Protopath `json:"protopath,omitempty"`
 	Def      Entry     `json:"def,omitempty"`
 }
 
@@ -92,13 +92,13 @@ type RPC struct {
 }
 
 type Report struct {
-	Current, Updated Protolock
-	Warnings         []Warning
+	Current, Updated Protolock `json:"current,omitempty"`
+	Warnings         []Warning `json:"warnings,omitempty"`
 }
 
 type Warning struct {
-	Filepath Protopath
-	Message  string
+	Filepath Protopath `json:"filepath,omitempty"`
+	Message  string    `json:"message,omitempty"`
 }
 
 type ProtoFile struct {
