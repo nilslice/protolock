@@ -11,7 +11,7 @@ message Channel {
 
   message A { int32 id = 1; }
 
-  A msg2 = 44;
+  A msg = 44;
 }
 
 message Display {
