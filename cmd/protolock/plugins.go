@@ -34,7 +34,7 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 		for {
 			select {
 			case <-pluginsDone:
-				break
+				return
 
 			case err := <-pluginErrsChan:
 				if err != nil {
@@ -47,10 +47,6 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 				}
 			}
 		}
-	}()
-
-	defer func() {
-		pluginsDone <- struct{}{}
 	}()
 
 	wg := &sync.WaitGroup{}
@@ -111,6 +107,7 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 	}
 
 	wg.Wait()
+	pluginsDone <- struct{}{}
 
 	if allPluginErrors != nil {
 		var errorMsgs []string
