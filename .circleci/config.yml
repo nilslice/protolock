@@ -4,6 +4,8 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.11
+        environment:
+          GO111MODULE: "on"
 
     working_directory: /go/src/github.com/nilslice/protolock
     steps:
@@ -23,14 +25,12 @@ jobs:
           command: |
             WARNINGS=$(protolock status --plugins=plugin-sample | wc -l)
             if [ "$WARNINGS" -ne 2 ]; then
-              exit 1
+              exit
             fi
-
       - run: 
           name: check output using plugin-sample-error
           command: |
             protolock status --plugins=plugin-sample-error | grep "some error"
-
       - run: 
           name: check output using multiple plugins, with one error expected
           command: |
@@ -38,7 +38,6 @@ jobs:
             echo $ERR | grep "some error"
             REV=$(protolock status --plugins=plugin-sample-error,plugin-sample)
             echo $REV | grep "some error"
-      
       - run: 
           name: check output using multiple plugins with errors
           command: |
@@ -47,7 +46,7 @@ jobs:
               exit 1
             fi
             MOREERRS=$(protolock status --plugins=plugin-sample-error,plugin-sample-error,plugin-sample-error | grep "some error" | wc -l)
-            if [ "$ERRS" -ne 3 ]; then
+            if [ "$MOREERRSERRS" -ne 3 ]; then
               exit 1
             fi
 
