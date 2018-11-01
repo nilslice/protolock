@@ -10,7 +10,6 @@ func main() {
 	plugin.Init(func(data *extend.Data) *extend.Data {
 		warnings := AddWarningsForExample(data.Current, data.Updated)
 		data.PluginWarnings = append(data.PluginWarnings, warnings...)
-		// data.PluginErrorMessage = "some error"
 		return data
 	})
 }
