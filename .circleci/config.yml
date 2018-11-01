@@ -20,34 +20,41 @@ jobs:
       - run: cat proto.lock | grep "testdata:/:test.proto"
       - run: protolock status
       - run: protolock commit
-      - run:
-          name: check output using plugin-sample
-          command: |
-            WARNINGS=$(protolock status --plugins=plugin-sample | wc -l)
-            if [ "$WARNINGS" -ne 2 ]; then
-              exit
-            fi
+      - run: protolock status --plugins=_not-a-plugin_ | grep "executable file not found"
       - run: 
           name: check output using plugin-sample-error
           command: |
+            set +o pipefail
+
             protolock status --plugins=plugin-sample-error | grep "some error"
+      - run:
+          name: check output using plugin-sample
+          command: |
+            set +o pipefail
+
+            WARNINGS=$(protolock status --plugins=plugin-sample | wc -l)
+            if [ "$WARNINGS" != 2 ]; then
+              exit 1
+            fi
       - run: 
           name: check output using multiple plugins, with one error expected
           command: |
-            ERR=$(protolock status --plugins=plugin-sample,plugin-sample-error)
-            echo $ERR | grep "some error"
-            REV=$(protolock status --plugins=plugin-sample-error,plugin-sample)
-            echo $REV | grep "some error"
+            set +o pipefail
+
+            protolock status --plugins=plugin-sample,plugin-sample-error | grep "some error"
+            protolock status --plugins=plugin-sample-error,plugin-sample | grep "some error"
       - run: 
           name: check output using multiple plugins with errors
           command: |
+            set +o pipefail
+
             ERRS=$(protolock status --plugins=plugin-sample-error,plugin-sample-error | grep "some error" | wc -l)
-            if [ "$ERRS" -ne 2 ]; then
+            if [ "$ERRS" != 2 ]; then
               exit 1
             fi
             MOREERRS=$(protolock status --plugins=plugin-sample-error,plugin-sample-error,plugin-sample-error | grep "some error" | wc -l)
-            if [ "$MOREERRSERRS" -ne 3 ]; then
+            if [ "$MOREERRS" != 3 ]; then
               exit 1
             fi
-
+            
 
