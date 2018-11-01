@@ -57,9 +57,13 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 	plugins := strings.Split(pluginList, ",")
 	for _, name := range plugins {
 		wg.Add(1)
+
+		// copy input data to be passed in to and processed by each plugin
+		pluginInputData := bytes.NewReader(inputData.Bytes())
+
 		// run all provided plugins in parallel, each recieving the same current
 		// and updated Protolock structs from the `protolock status` call
-		go func() {
+		go func(name string) {
 			defer wg.Done()
 			name = strings.TrimSpace(name)
 			path, err := exec.LookPath(name)
@@ -71,9 +75,11 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 				return
 			}
 
+			// initialize the executable to be called from protolock using the
+			// absolute path and copy of the input data
 			plugin := &exec.Cmd{
 				Path:  path,
-				Stdin: inputData,
+				Stdin: pluginInputData,
 			}
 
 			// execute the plugin and capture the output
@@ -90,6 +96,8 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 				return
 			}
 
+			// gather all warnings from each plugin, and send to warning chan
+			// collector as a slice to keep together
 			if pluginData.PluginWarnings != nil {
 				pluginWarningsChan <- pluginData.PluginWarnings
 			}
@@ -99,7 +107,7 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 					name, path, errors.New(pluginData.PluginErrorMessage),
 				)
 			}
-		}()
+		}(name)
 	}
 
 	wg.Wait()

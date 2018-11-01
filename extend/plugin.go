@@ -10,6 +10,11 @@ import (
 	"github.com/nilslice/protolock"
 )
 
+// Plugin is an interface that defines the protolock plugin specification.
+type Plugin interface {
+	Init(PluginFunc)
+}
+
 // Data contains the current and updated Protolock structs created by the
 // `protolock` internal parser and deserializer, and a slice of Warning structs
 // for the plugin to append its own custom warnings.
@@ -69,3 +74,5 @@ func (p *plugin) wrapErrAndLog(err error) {
 		fmt.Fprintf(os.Stdout, "[protolock:plugin] %s: %v", p.name, err)
 	}
 }
+
+var _ Plugin = &plugin{}
