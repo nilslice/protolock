@@ -12,7 +12,7 @@ import (
 const protoWithImports = `
 syntax = "proto3";
 
-import "testdata/test.proto"
+import "testdata/test.proto";
 
 package test;
 
@@ -29,7 +29,7 @@ syntax = "proto3";
 package test;
 
 message Channel {
-  option (ext.persisted) = true
+  option (ext.persisted) = true;
   int64 id = 1;
   string name = 2;
   string description = 3;
@@ -37,7 +37,6 @@ message Channel {
 `
 
 var gpfPath = filepath.Join("testdata", "getProtoFiles")
-
 
 func TestParseIncludingImports(t *testing.T) {
 	r := strings.NewReader(protoWithImports)

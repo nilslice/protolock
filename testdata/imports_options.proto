@@ -1,0 +1,17 @@
+syntax = "proto3";
+package test;
+
+import "testdata/test.proto";
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message Channel2 {
+  option (ext.persisted) = true;
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
