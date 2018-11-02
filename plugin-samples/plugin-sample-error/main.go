@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	plugin := extend.NewPlugin("sample") // "sample" is arbitrary name used to correlate error messages
+	plugin := extend.NewPlugin("sample-error") // "sample-error" is arbitrary name used to correlate error messages
 	plugin.Init(func(data *extend.Data) *extend.Data {
 		warnings := AddWarningsForExample(data.Current, data.Updated)
 		data.PluginWarnings = append(data.PluginWarnings, warnings...)
