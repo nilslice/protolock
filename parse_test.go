@@ -44,7 +44,7 @@ func TestParseIncludingImports(t *testing.T) {
 	entry, err := parse(r)
 	assert.NoError(t, err)
 
-	assert.Equal(t, filepath.Join("testdata", "test.proto"), entry.Imports[0].Path)
+	assert.Equal(t, "testdata/test.proto", entry.Imports[0].Path)
 }
 
 func TestParseIncludingOptions(t *testing.T) {
