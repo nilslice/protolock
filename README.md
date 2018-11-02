@@ -114,6 +114,7 @@ warnings if any RPC signature has been changed while using the same name.
 
 - [Fanatics](https://github.com/fanatics)
 - [Maven Plugin](https://github.com/salesforce/proto-backwards-compat-maven-plugin) by [Salesforce](https://github.com/salesforce)
+- [Istio](https://github.com/istio/api)
 
 ---
 
