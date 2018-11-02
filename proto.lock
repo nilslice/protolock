@@ -69,6 +69,64 @@
       }
     },
     {
+      "protopath": "testdata:/:imports_options.proto",
+      "def": {
+        "messages": [
+          {
+            "name": "Channel",
+            "fields": [
+              {
+                "id": 1,
+                "name": "id",
+                "type": "int64"
+              },
+              {
+                "id": 2,
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "id": 3,
+                "name": "description",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "Channel2",
+            "fields": [
+              {
+                "id": 1,
+                "name": "id",
+                "type": "int64"
+              },
+              {
+                "id": 2,
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "id": 3,
+                "name": "description",
+                "type": "string"
+              }
+            ],
+            "options": [
+              {
+                "name": "(ext.persisted)",
+                "value": "true"
+              }
+            ]
+          }
+        ],
+        "imports": [
+          {
+            "path": "testdata/test.proto"
+          }
+        ]
+      }
+    },
+    {
       "protopath": "testdata:/:test.proto",
       "def": {
         "enums": [
