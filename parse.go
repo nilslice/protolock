@@ -310,7 +310,7 @@ func parseMessage(m *proto.Message) Message {
 
 		if o, ok := v.(*proto.Option); ok {
 			msg.Options = append(msg.Options, Option{
-				Name: o.Name,
+				Name:  o.Name,
 				Value: o.Constant.Source,
 			})
 		}

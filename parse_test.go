@@ -41,15 +41,17 @@ var gpfPath = filepath.Join("testdata", "getProtoFiles")
 func TestParseIncludingImports(t *testing.T) {
 	r := strings.NewReader(protoWithImports)
 
-	entry, _ := parse(r)
+	entry, err := parse(r)
+	assert.NoError(t, err)
 
-	assert.Equal(t, "testdata/test.proto", entry.Imports[0].Path)
+	assert.Equal(t, filepath.Join("testdata", "test.proto"), entry.Imports[0].Path)
 }
 
 func TestParseIncludingOptions(t *testing.T) {
 	r := strings.NewReader(protoWithOptions)
 
-	entry, _ := parse(r)
+	entry, err := parse(r)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "(ext.persisted)", entry.Messages[0].Options[0].Name)
 	assert.Equal(t, "true", entry.Messages[0].Options[0].Value)
