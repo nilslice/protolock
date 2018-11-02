@@ -36,6 +36,12 @@ message Channel {
   string description = 3;
 }
 
+message Request {
+  reserved 2;
+  reserved "field2";
+  .example.snth.Field field1 = 1;
+}
+
 message NextRequest {
   reserved 3;
   reserved "a_map";
@@ -97,6 +103,11 @@ message Channel {
     int32 id = 1;
     string name = 2;
   }
+}
+
+message Request {
+  .example.snth.Field field1 = 1;
+  .example.snth.Field field2 = 2;
 }
 
 message NextRequest {
@@ -346,6 +357,11 @@ message Channel {
   bool bar = 5;
 }
 
+message Request {
+  .example.snth.Field field2 = 1;
+}
+
+
 message NextRequest {
   string name = 1;
   map<string, int32> a_map = 3;
@@ -373,6 +389,10 @@ message Channel {
   string description = 3;
   string foo = 4;
   repeated bool bar = 5;
+}
+
+message Request {
+  .example.notSnth.NotField field2 = 1;
 }
 
 message NextRequest {
@@ -737,7 +757,7 @@ func TestChangingFieldTypes(t *testing.T) {
 
 	warnings, ok := NoChangingFieldTypes(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 6)
+	assert.Len(t, warnings, 7)
 
 	warnings, ok = NoChangingFieldTypes(updLock, updLock)
 	assert.True(t, ok)
@@ -751,7 +771,7 @@ func TestUsingReservedFields(t *testing.T) {
 
 	warnings, ok := NoUsingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 13)
+	assert.Len(t, warnings, 15)
 
 	warnings, ok = NoUsingReservedFields(updLock, updLock)
 	assert.True(t, ok)
