@@ -19,9 +19,10 @@ type Plugin interface {
 // `protolock` internal parser and deserializer, and a slice of Warning structs
 // for the plugin to append its own custom warnings.
 type Data struct {
-	Current, Updated   protolock.Protolock
-	PluginWarnings     []protolock.Warning
-	PluginErrorMessage string
+	Current            protolock.Protolock `json:"current,omitempty"`
+	Updated            protolock.Protolock `json:"updated,omitempty"`
+	PluginWarnings     []protolock.Warning `json:"plugin_warnings,omitempty"`
+	PluginErrorMessage string              `json:"plugin_error_message,omitempty"`
 }
 
 // PluginFunc is a function which defines plugin behavior, and is provided a
