@@ -54,7 +54,7 @@ type Message struct {
 
 type EnumField struct {
 	Name    string `json:"name,omitempty"`
-	Integer int    `json:"integer"`
+	Integer int    `json:"integer,omitempty"`
 }
 
 type Enum struct {

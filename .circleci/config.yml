@@ -57,4 +57,27 @@ jobs:
               exit 1
             fi
             
+  plugin_nodejs:
+    docker:
+      - image: circleci/node:8
 
+    steps: 
+      - checkout
+      # fetch depenencies, test code
+      - run: npm i --prefix plugin-samples/plugin-sample-js/
+      - run: npm run pack --prefix plugin-samples/plugin-sample-js/
+      - run: 
+          name: 
+          command: |
+            set +o pipefail
+            cd plugin-samples/plugin-sample-js/
+            WARNINGS=$(cat example.data.json | ./plugin-sample-js)
+            echo $WARNINGS | grep '{"filepath":"path/to/file.proto","message":"Something bad happened."}'
+            echo $WARNINGS | grep '{"filepath":"path/to/another.proto","message":"Something else bad happened."}'
+
+workflows:
+  version: 2
+  build-cmd-test-plugins:
+    jobs:
+      - build
+      - plugin_nodejs
