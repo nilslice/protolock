@@ -846,7 +846,7 @@ func parseTestProto(t *testing.T, proto string) Protolock {
 	return Protolock{
 		Definitions: []Definition{
 			{
-				Filepath: protopath("memory/io.Reader"),
+				Filepath: Protopath("memory/io.Reader"),
 				Def:      entry,
 			},
 		},

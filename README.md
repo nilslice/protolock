@@ -11,32 +11,6 @@ Ever _accidentally_ break your API compatibility while you're busy fixing proble
 
 `protolock` attempts to help prevent this from happening.
 
-## Install
-If you have [Go](https://golang.org) installed, you can install `protolock` by
-running:
-```bash
-go get -u github.com/nilslice/protolock/...
-```
-
-Otherwise, download a pre-built binary for Windows, macOS, or Linux from the [latest release](https://github.com/nilslice/protolock/releases/latest) page.
-
-## Usage
-```
-protolock <command> [options]
-
-Commands:
-	-h, --help, help	display the usage information for protolock
-	init			initialize a proto.lock file from current tree
-	status			check for breaking changes and report conflicts
-	commit			rewrite proto.lock file with current tree if no conflicts (--force to override)
-
-Options:
-	--strict [true]		enable strict mode and enforce all built-in rules
-	--debug	[false]		enable debug mode and output debug messages
-	--ignore 		comma-separated list of filepaths to ignore
-	--force [false]		forces commit to rewrite proto.lock file and disregards warnings
-```
-
 ## Overview
 
 1. **Initialize** your repository: 
@@ -62,6 +36,39 @@ Options:
 In all, prevent yourself from compiling your protobufs and generating code if breaking changes have been made.
 
 **Recommended:** commit the output `proto.lock` file into your version control system
+
+## Install
+If you have [Go](https://golang.org) installed, you can install `protolock` by
+running:
+```bash
+go get -u github.com/nilslice/protolock/...
+```
+
+Otherwise, download a pre-built binary for Windows, macOS, or Linux from the [latest release](https://github.com/nilslice/protolock/releases/latest) page.
+
+## Usage
+```
+protolock <command> [options]
+
+Commands:
+	-h, --help, help	display the usage information for protolock
+	init			initialize a proto.lock file from current tree
+	status			check for breaking changes and report conflicts
+	commit			rewrite proto.lock file with current tree if no conflicts (--force to override)
+
+Options:
+	--strict [true]		enable strict mode and enforce all built-in rules
+	--debug	[false]		enable debug mode and output debug messages
+	--ignore 		comma-separated list of filepaths to ignore
+	--force [false]		forces commit to rewrite proto.lock file and disregards warnings
+	--plugins               comma-separated list of executable protolock plugin names
+```
+
+## Related Projects & Users
+
+- [Fanatics](https://github.com/fanatics)
+- [Maven Plugin](https://github.com/salesforce/proto-backwards-compat-maven-plugin) by [Salesforce](https://github.com/salesforce)
+- [Istio](https://github.com/istio/api)
 
 ## Rules Enforced
 
@@ -110,11 +117,11 @@ warnings if any RPC signature has been changed while using the same name.
 
 ---
 
-## Related Projects & Users
-
-- [Fanatics](https://github.com/fanatics)
-- [Maven Plugin](https://github.com/salesforce/proto-backwards-compat-maven-plugin) by [Salesforce](https://github.com/salesforce)
-- [Istio](https://github.com/istio/api)
+## Plugins
+The default rules enforced by `protolock` may not cover everything you want to 
+do. If you have custom checks you'd like run on your .proto files, create a 
+plugin, and have `protolock` run it and report your warnings. Read the wiki to 
+learn more about [creating and using plugins](https://github.com/nilslice/protolock/wiki/Plugins).
 
 ---
 

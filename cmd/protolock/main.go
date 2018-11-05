@@ -30,6 +30,7 @@ Options:
 	--debug	[false]		enable debug mode and output debug messages
 	--ignore 		comma-separated list of filepaths to ignore
 	--force [false]		forces commit to rewrite proto.lock file and disregards warnings
+	--plugins 		comma-separated list of executable protolock plugin names
 `
 
 var (
@@ -38,6 +39,7 @@ var (
 	strict  = options.Bool("strict", true, "enable strict mode and enforce all built-in rules")
 	ignore  = options.String("ignore", "", "comma-separated list of filepaths to ignore")
 	force   = options.Bool("force", false, "force commit to rewrite proto.lock file and disregard warnings")
+	plugins = options.String("plugins", "", "comma-separated list of executable protolock plugin names")
 )
 
 func main() {
@@ -98,16 +100,30 @@ func main() {
 
 	case "status":
 		report, err := protolock.Status(*ignore)
-		if err != nil {
-			handleReport(report, err)
+		if err != protolock.ErrWarningsFound && err != nil {
+			fmt.Println("[protolock]:", err)
+			os.Exit(1)
 		}
+
+		// if plugins are provided, attempt to execute each as a exeutable
+		// located in the user's OS executable path as reported by stdlib's
+		// exec.LookPath func
+		if *plugins != "" {
+			report, err = runPlugins(*plugins, report)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+		handleReport(report, err)
 
 	default:
 		os.Exit(0)
 	}
 }
 
-func handleReport(report protolock.Report, err error) {
+func handleReport(report *protolock.Report, err error) {
 	if len(report.Warnings) > 0 {
 		for _, w := range report.Warnings {
 			fmt.Fprintf(
@@ -119,7 +135,9 @@ func handleReport(report protolock.Report, err error) {
 		os.Exit(1)
 	}
 
-	fmt.Println(err)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func saveToLockFile(r io.Reader) error {

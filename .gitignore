@@ -1,2 +1,5 @@
-protolock
+./protolock
 pkg
+node_modules
+plugin-samples/plugin-sample-js/etc
+plugin-samples/plugin-sample-js/plugin-sample-js
