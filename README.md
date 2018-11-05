@@ -11,6 +11,32 @@ Ever _accidentally_ break your API compatibility while you're busy fixing proble
 
 `protolock` attempts to help prevent this from happening.
 
+## Overview
+
+1. **Initialize** your repository: 
+
+        $ protolock init
+        # creates a `proto.lock` file
+
+3. **Add changes** to .proto messages or services, verify no breaking changes made: 
+
+        $ protolock status
+        CONFLICT: "Channel" is missing ID: 108, which had been reserved [path/to/file.proto]
+        CONFLICT: "Channel" is missing ID: 109, which had been reserved [path/to/file.proto]
+
+2. **Commit** a new state of your .protos (rewrites `proto.lock` if no warnings): 
+
+        $ protolock commit
+        # optionally provide --force flag to disregard warnings
+
+4. **Integrate** into your protobuf compilation step: 
+
+        $ protolock status && protoc -I ...
+
+In all, prevent yourself from compiling your protobufs and generating code if breaking changes have been made.
+
+**Recommended:** commit the output `proto.lock` file into your version control system
+
 ## Install
 If you have [Go](https://golang.org) installed, you can install `protolock` by
 running:
@@ -38,31 +64,11 @@ Options:
 	--plugins               comma-separated list of executable protolock plugin names
 ```
 
-## Overview
+## Related Projects & Users
 
-1. **Initialize** your repository: 
-
-        $ protolock init
-        # creates a `proto.lock` file
-
-3. **Add changes** to .proto messages or services, verify no breaking changes made: 
-
-        $ protolock status
-        CONFLICT: "Channel" is missing ID: 108, which had been reserved [path/to/file.proto]
-        CONFLICT: "Channel" is missing ID: 109, which had been reserved [path/to/file.proto]
-
-2. **Commit** a new state of your .protos (rewrites `proto.lock` if no warnings): 
-
-        $ protolock commit
-        # optionally provide --force flag to disregard warnings
-
-4. **Integrate** into your protobuf compilation step: 
-
-        $ protolock status && protoc -I ...
-
-In all, prevent yourself from compiling your protobufs and generating code if breaking changes have been made.
-
-**Recommended:** commit the output `proto.lock` file into your version control system
+- [Fanatics](https://github.com/fanatics)
+- [Maven Plugin](https://github.com/salesforce/proto-backwards-compat-maven-plugin) by [Salesforce](https://github.com/salesforce)
+- [Istio](https://github.com/istio/api)
 
 ## Rules Enforced
 
@@ -111,11 +117,11 @@ warnings if any RPC signature has been changed while using the same name.
 
 ---
 
-## Related Projects & Users
-
-- [Fanatics](https://github.com/fanatics)
-- [Maven Plugin](https://github.com/salesforce/proto-backwards-compat-maven-plugin) by [Salesforce](https://github.com/salesforce)
-- [Istio](https://github.com/istio/api)
+## Plugins
+The default rules enforced by `protolock` may not cover everything you want to 
+do. If you have custom checks you'd like run on your .proto files, create a 
+plugin, and have `protolock` run it and report your warnings. Read the wiki to 
+learn more about [creating and using plugins](https://github.com/nilslice/protolock/wiki/Plugins).
 
 ---
 
