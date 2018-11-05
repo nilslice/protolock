@@ -23,15 +23,8 @@ function readStdinSync() {
 
 async function main() {
     data = JSON.parse(await readStdinSync())
-    
-    // // demo: show all the message names to check
-    // data.updated.definitions.forEach(definition => {
-    //     definition.def.messages.forEach(message => {
-    //         console.log(message.name)
-    //     })
-    // })
 
-    console.log(JSON.stringify(customRuleFunc(data)))
+    console.log(JSON.stringify(customRuleFunc(data))) // console.log writes to stdout
 }
 
 function customRuleFunc(data) {
