@@ -134,8 +134,7 @@
             "name": "TestEnum",
             "enum_fields": [
               {
-                "name": "FIRST",
-                "integer": 0
+                "name": "FIRST"
               },
               {
                 "name": "SECOND",
@@ -258,7 +257,8 @@
               3
             ],
             "reserved_names": [
-              "a_map"
+              "a_map",
+              "single_quoted"
             ],
             "messages": [
               {
