@@ -684,7 +684,7 @@ message B {
 
 func TestParseOnReader(t *testing.T) {
 	r := strings.NewReader(simpleProto)
-	_, err := parse(r)
+	_, err := Parse(r)
 	assert.NoError(t, err)
 }
 
@@ -821,7 +821,7 @@ func TestShouldConflictReusingFieldsNestedMessages(t *testing.T) {
 
 func parseTestProto(t *testing.T, proto string) Protolock {
 	r := strings.NewReader(proto)
-	entry, err := parse(r)
+	entry, err := Parse(r)
 	assert.NoError(t, err)
 	return Protolock{
 		Definitions: []Definition{

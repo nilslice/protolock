@@ -100,7 +100,7 @@ var (
 	svcs  []Service
 )
 
-func parse(r io.Reader) (Entry, error) {
+func Parse(r io.Reader) (Entry, error) {
 	parser := proto.NewParser(r)
 	def, err := parser.Parse()
 	if err != nil {
@@ -419,7 +419,7 @@ func getUpdatedLock(ignores string) (*Protolock, error) {
 			return nil, err
 		}
 
-		entry, err := parse(f)
+		entry, err := Parse(f)
 		if err != nil {
 			printIfErr(f.Close())
 			return nil, err
