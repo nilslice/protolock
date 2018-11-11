@@ -36,7 +36,34 @@ message Channel {
 }
 `
 
+const protoWithSingleQuoteReservedNames = `
+syntax = "proto3";
+
+package test;
+
+message Channel {
+  reserved 'thing', 'another';
+  reserved "more", 'mixed';
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+`
+
 var gpfPath = filepath.Join("testdata", "getProtoFiles")
+
+func TestParseSingleQuoteReservedNames(t *testing.T) {
+	r := strings.NewReader(protoWithSingleQuoteReservedNames)
+
+	entry, err := Parse(r)
+	assert.NoError(t, err)
+
+	assert.Len(t, entry.Messages[0].ReservedNames, 4)
+	assert.EqualValues(t,
+		[]string{"thing", "another", "more", "mixed"},
+		entry.Messages[0].ReservedNames,
+	)
+}
 
 func TestParseIncludingImports(t *testing.T) {
 	r := strings.NewReader(protoWithImports)

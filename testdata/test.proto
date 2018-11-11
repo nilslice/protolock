@@ -15,7 +15,7 @@ message Channel {
 }
 
 message Display {
-  reserved "a_map";
+  reserved "a_map", 'single_quoted';
   reserved 3;
   int32 width = 1;
   int32 height = 2;
