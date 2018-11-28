@@ -71,6 +71,33 @@
     {
       "protopath": "testdata:/:imports_options.proto",
       "def": {
+        "enums": [
+          {
+            "name": "TestEnumOption",
+            "enum_fields": [
+              {
+                "name": "FIRST"
+              },
+              {
+                "name": "SECOND",
+                "integer": 1
+              },
+              {
+                "name": "SEGUNDO",
+                "integer": 3,
+                "options": [
+                  {
+                    "name": "(my_enum_value_option)",
+                    "value": "321"
+                  }
+                ]
+              }
+            ],
+            "reserved_ids": [
+              2
+            ]
+          }
+        ],
         "messages": [
           {
             "name": "Channel",
@@ -103,12 +130,38 @@
               {
                 "id": 2,
                 "name": "name",
-                "type": "string"
+                "type": "string",
+                "options": [
+                  {
+                    "name": "(personal)",
+                    "value": "true"
+                  },
+                  {
+                    "name": "(owner)",
+                    "value": "test"
+                  }
+                ]
               },
               {
                 "id": 3,
                 "name": "description",
                 "type": "string"
+              }
+            ],
+            "maps": [
+              {
+                "key_type": "string",
+                "field": {
+                  "id": 4,
+                  "name": "map",
+                  "type": "int32",
+                  "options": [
+                    {
+                      "name": "(personal)",
+                      "value": "true"
+                    }
+                  ]
+                }
               }
             ],
             "options": [

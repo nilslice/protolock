@@ -53,8 +53,9 @@ type Message struct {
 }
 
 type EnumField struct {
-	Name    string `json:"name,omitempty"`
-	Integer int    `json:"integer,omitempty"`
+	Name    string   `json:"name,omitempty"`
+	Integer int      `json:"integer,omitempty"`
+	Options []Option `json:"options,omitempty"`
 }
 
 type Enum struct {
@@ -71,10 +72,11 @@ type Map struct {
 }
 
 type Field struct {
-	ID         int    `json:"id,omitempty"`
-	Name       string `json:"name,omitempty"`
-	Type       string `json:"type,omitempty"`
-	IsRepeated bool   `json:"is_repeated,omitempty"`
+	ID         int      `json:"id,omitempty"`
+	Name       string   `json:"name,omitempty"`
+	Type       string   `json:"type,omitempty"`
+	IsRepeated bool     `json:"is_repeated,omitempty"`
+	Options    []Option `json:"options,omitempty"`
 }
 
 type Service struct {
@@ -170,11 +172,20 @@ func parseEnum(e *proto.Enum) Enum {
 	}
 
 	for _, v := range e.Elements {
-		if e, ok := v.(*proto.EnumField); ok {
-			enum.EnumFields = append(enum.EnumFields, EnumField{
-				Name:    e.Name,
-				Integer: e.Integer,
-			})
+		if ef, ok := v.(*proto.EnumField); ok {
+			field := EnumField{
+				Name:    ef.Name,
+				Integer: ef.Integer,
+			}
+			for _, ee := range ef.Elements {
+				if o, ok := ee.(*proto.Option); ok {
+					field.Options = append(field.Options, Option{
+						Name:  o.Name,
+						Value: o.Constant.Source,
+					})
+				}
+			}
+			enum.EnumFields = append(enum.EnumFields, field)
 		}
 
 		if r, ok := v.(*proto.Reserved); ok {
@@ -261,6 +272,7 @@ func parseMessage(m *proto.Message) Message {
 				Name:       f.Name,
 				Type:       f.Type,
 				IsRepeated: f.Repeated,
+				Options:    parseOptions(f.Options),
 			})
 		}
 
@@ -273,6 +285,7 @@ func parseMessage(m *proto.Message) Message {
 					Name:       f.Name,
 					Type:       f.Type,
 					IsRepeated: false,
+					Options:    parseOptions(f.Options),
 				},
 			})
 		}
@@ -286,6 +299,7 @@ func parseMessage(m *proto.Message) Message {
 						Name:       f.Name,
 						Type:       f.Type,
 						IsRepeated: false,
+						Options:    parseOptions(f.Options),
 					})
 				}
 			}
@@ -324,6 +338,17 @@ func parseMessage(m *proto.Message) Message {
 	}
 
 	return msg
+}
+
+func parseOptions(opts []*proto.Option) []Option {
+	var msgOpts []Option
+	for _, o := range opts {
+		msgOpts = append(msgOpts, Option{
+			Name:  o.Name,
+			Value: o.Constant.Source,
+		})
+	}
+	return msgOpts
 }
 
 func protoWithImport(apply func(p *proto.Import)) proto.Handler {
