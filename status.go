@@ -7,13 +7,13 @@ import (
 
 // Status will report on any issues encountered when comparing the updated tree
 // of parsed proto files and the current proto.lock file.
-func Status(ignore string) (*Report, error) {
-	updated, err := getUpdatedLock(ignore)
+func Status(cfg Config) (*Report, error) {
+	updated, err := getUpdatedLock(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	lockFile, err := openLockFile()
+	lockFile, err := openLockFile(cfg)
 	if err != nil {
 		if os.IsNotExist(err) {
 			msg := `no "proto.lock" file found, first run "init"`

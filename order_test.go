@@ -11,15 +11,18 @@ import (
 const ignoreArg = ""
 
 func TestOrder(t *testing.T) {
+	cfg, err := NewConfig(".", ".", ignoreArg)
+	assert.NoError(t, err)
+
 	// verify that the re-production of the same Protolock encoded as json
 	// is equivalent to any previously encoded version of the same Protolock
-	f, err := os.Open("proto.lock")
+	f, err := os.Open(cfg.LockFilePath())
 	assert.NoError(t, err)
 
 	current, err := protolockFromReader(f)
 	assert.NoError(t, err)
 
-	r, err := Commit(ignoreArg)
+	r, err := Commit(*cfg)
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 

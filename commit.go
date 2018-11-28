@@ -8,13 +8,13 @@ import (
 
 // Commit will return an io.Reader with the lock representation data for caller to
 // use as needed.
-func Commit(ignore string) (io.Reader, error) {
-	if _, err := os.Stat(LockFileName); err != nil && os.IsNotExist(err) {
+func Commit(cfg Config) (io.Reader, error) {
+	if !cfg.LockFileExists() {
 		fmt.Println(`no "proto.lock" file found, first run "init"`)
 		os.Exit(1)
 	}
 
-	updated, err := getUpdatedLock(ignore)
+	updated, err := getUpdatedLock(cfg)
 	if err != nil {
 		return nil, err
 	}
