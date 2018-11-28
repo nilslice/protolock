@@ -12,13 +12,13 @@ const protoSuffix = ".proto"
 
 // Init will return an io.Reader with the lock representation data for caller to
 // use as needed.
-func Init(ignore string) (io.Reader, error) {
-	if _, err := os.Stat(LockFileName); err == nil && !os.IsNotExist(err) {
+func Init(cfg Config) (io.Reader, error) {
+	if cfg.LockFileExists() {
 		fmt.Println(`a "proto.lock" file was already found, use "commit" to update`)
 		os.Exit(1)
 	}
 
-	updated, err := getUpdatedLock(ignore)
+	updated, err := getUpdatedLock(cfg)
 	if err != nil {
 		return nil, err
 	}
