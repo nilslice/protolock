@@ -12,6 +12,15 @@ message Channel {
 message Channel2 {
   option (ext.persisted) = true;
   int64 id = 1;
-  string name = 2;
+  string name = 2 [(personal) = true, (owner) = 'test'];
   string description = 3;
+  map<string, int32> map = 4 [(personal) = true];
+}
+
+enum TestEnumOption {
+  reserved 2;
+  option allow_alias = true;
+  FIRST = 0;
+  SECOND = 1;
+  SEGUNDO = 3 [(my_enum_value_option) = 321];
 }
