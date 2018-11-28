@@ -62,6 +62,8 @@ Options:
 	--ignore 		comma-separated list of filepaths to ignore
 	--force [false]		forces commit to rewrite proto.lock file and disregards warnings
 	--plugins               comma-separated list of executable protolock plugin names
+	--lockdir [.]		directory of proto.lock file
+	--protoroot [.]		root of directory tree containing proto files
 ```
 
 ## Related Projects & Users

@@ -367,8 +367,8 @@ func withImport(im *proto.Import) {
 }
 
 // openLockFile opens and returns the lock file on disk for reading.
-func openLockFile() (io.ReadCloser, error) {
-	f, err := os.Open(LockFileName)
+func openLockFile(cfg Config) (io.ReadCloser, error) {
+	f, err := os.Open(cfg.LockFilePath())
 	if err != nil {
 		return nil, err
 	}
@@ -468,16 +468,16 @@ func getProtoFiles(root string, ignores string) ([]string, error) {
 
 // getUpdatedLock finds all .proto files recursively in tree, parse each file
 // and accumulate all definitions into an updated Protolock.
-func getUpdatedLock(ignores string) (*Protolock, error) {
+func getUpdatedLock(cfg Config) (*Protolock, error) {
 	// files is a slice of struct `ProtoFile` to be joined into the proto.lock file.
 	var files []ProtoFile
 
-	root, err := os.Getwd()
+	root, err := filepath.Abs(cfg.ProtoRoot)
 	if err != nil {
 		return nil, err
 	}
 
-	protoFiles, err := getProtoFiles(root, ignores)
+	protoFiles, err := getProtoFiles(root, cfg.Ignore)
 	if err != nil {
 		return nil, err
 	}
