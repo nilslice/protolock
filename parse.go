@@ -30,10 +30,15 @@ type Entry struct {
 	Messages []Message `json:"messages,omitempty"`
 	Services []Service `json:"services,omitempty"`
 	Imports  []Import  `json:"imports,omitempty"`
+	Package  Package   `json:"package,omitempty"`
 }
 
 type Import struct {
 	Path string `json:"path,omitempty"`
+}
+
+type Package struct {
+	Name string `json:"name,omitempty"`
 }
 
 type Option struct {
@@ -114,6 +119,7 @@ var (
 	msgs  []Message
 	svcs  []Service
 	imps  []Import
+	pkg   Package
 
 	ErrWarningsFound = errors.New("comparison found one or more warnings")
 )
@@ -136,6 +142,7 @@ func Parse(r io.Reader) (Entry, error) {
 		proto.WithService(withService),
 		proto.WithMessage(withMessage),
 		protoWithImport(withImport),
+		protoWithPackage(withPackage),
 	)
 
 	return Entry{
@@ -143,6 +150,7 @@ func Parse(r io.Reader) (Entry, error) {
 		Messages: msgs,
 		Services: svcs,
 		Imports:  imps,
+		Package:  pkg,
 	}, nil
 }
 
@@ -386,6 +394,20 @@ func withImport(im *proto.Import) {
 		Path: im.Filename,
 	}
 	imps = append(imps, imp)
+}
+
+func protoWithPackage(apply func(p *proto.Package)) proto.Handler {
+	return func(v proto.Visitee) {
+		if s, ok := v.(*proto.Package); ok {
+			apply(s)
+		}
+	}
+}
+
+func withPackage(im *proto.Package) {
+	pkg = Package{
+		Name: im.Name,
+	}
 }
 
 // openLockFile opens and returns the lock file on disk for reading.
