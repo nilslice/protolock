@@ -121,7 +121,7 @@
             "options": [
               {
                 "name": "(ext.persisted)",
-                "values": [
+                "aggregated": [
                   {
                     "name": "opt1",
                     "value": "true"
@@ -164,7 +164,7 @@
                 "options": [
                   {
                     "name": "(custom_options_commas)",
-                    "values": [
+                    "aggregated": [
                       {
                         "name": "personal",
                         "value": "true"
@@ -188,7 +188,7 @@
                 "options": [
                   {
                     "name": "(custom_options)",
-                    "values": [
+                    "aggregated": [
                       {
                         "name": "personal",
                         "value": "true"

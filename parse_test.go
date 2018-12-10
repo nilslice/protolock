@@ -160,11 +160,11 @@ func TestParseIncludingNestedMessageOptions(t *testing.T) {
 
 	assert.Equal(t, "(ext.persisted)", entry.Messages[0].Options[0].Name)
 	assert.Empty(t, entry.Messages[0].Options[0].Value)
-	assert.Len(t, entry.Messages[0].Options[0].AggregatedValues, 2)
-	assert.Equal(t, "opt1", entry.Messages[0].Options[0].AggregatedValues[0].Name)
-	assert.Equal(t, "true", entry.Messages[0].Options[0].AggregatedValues[0].Value)
-	assert.Equal(t, "opt2", entry.Messages[0].Options[0].AggregatedValues[1].Name)
-	assert.Equal(t, "false", entry.Messages[0].Options[0].AggregatedValues[1].Value)
+	assert.Len(t, entry.Messages[0].Options[0].Aggregated, 2)
+	assert.Equal(t, "opt1", entry.Messages[0].Options[0].Aggregated[0].Name)
+	assert.Equal(t, "true", entry.Messages[0].Options[0].Aggregated[0].Value)
+	assert.Equal(t, "opt2", entry.Messages[0].Options[0].Aggregated[1].Name)
+	assert.Equal(t, "false", entry.Messages[0].Options[0].Aggregated[1].Value)
 }
 
 func TestParseIncludingFieldOptions(t *testing.T) {
@@ -206,20 +206,20 @@ func TestParseIncludingNestedFieldOptionsAggregated(t *testing.T) {
 
 	assert.Len(t, entry.Messages[0].Fields[2].Options, 1)
 	assert.Equal(t, "(custom_options_commas)", entry.Messages[0].Fields[2].Options[0].Name)
-	assert.Equal(t, "personal", entry.Messages[0].Fields[2].Options[0].AggregatedValues[0].Name)
-	assert.Equal(t, "true", entry.Messages[0].Fields[2].Options[0].AggregatedValues[0].Value)
-	assert.Equal(t, "internal", entry.Messages[0].Fields[2].Options[0].AggregatedValues[1].Name)
-	assert.Equal(t, "false", entry.Messages[0].Fields[2].Options[0].AggregatedValues[1].Value)
-	assert.Equal(t, "owner", entry.Messages[0].Fields[2].Options[0].AggregatedValues[2].Name)
-	assert.Equal(t, "some owner", entry.Messages[0].Fields[2].Options[0].AggregatedValues[2].Value)
+	assert.Equal(t, "personal", entry.Messages[0].Fields[2].Options[0].Aggregated[0].Name)
+	assert.Equal(t, "true", entry.Messages[0].Fields[2].Options[0].Aggregated[0].Value)
+	assert.Equal(t, "internal", entry.Messages[0].Fields[2].Options[0].Aggregated[1].Name)
+	assert.Equal(t, "false", entry.Messages[0].Fields[2].Options[0].Aggregated[1].Value)
+	assert.Equal(t, "owner", entry.Messages[0].Fields[2].Options[0].Aggregated[2].Name)
+	assert.Equal(t, "some owner", entry.Messages[0].Fields[2].Options[0].Aggregated[2].Value)
 	assert.Len(t, entry.Messages[0].Fields[3].Options, 1)
 	assert.Equal(t, "(custom_options)", entry.Messages[0].Fields[3].Options[0].Name)
-	assert.Equal(t, "personal", entry.Messages[0].Fields[3].Options[0].AggregatedValues[0].Name)
-	assert.Equal(t, "true", entry.Messages[0].Fields[3].Options[0].AggregatedValues[0].Value)
-	assert.Equal(t, "internal", entry.Messages[0].Fields[3].Options[0].AggregatedValues[1].Name)
-	assert.Equal(t, "false", entry.Messages[0].Fields[3].Options[0].AggregatedValues[1].Value)
-	assert.Equal(t, "owner", entry.Messages[0].Fields[3].Options[0].AggregatedValues[2].Name)
-	assert.Equal(t, "some owner", entry.Messages[0].Fields[3].Options[0].AggregatedValues[2].Value)
+	assert.Equal(t, "personal", entry.Messages[0].Fields[3].Options[0].Aggregated[0].Name)
+	assert.Equal(t, "true", entry.Messages[0].Fields[3].Options[0].Aggregated[0].Value)
+	assert.Equal(t, "internal", entry.Messages[0].Fields[3].Options[0].Aggregated[1].Name)
+	assert.Equal(t, "false", entry.Messages[0].Fields[3].Options[0].Aggregated[1].Value)
+	assert.Equal(t, "owner", entry.Messages[0].Fields[3].Options[0].Aggregated[2].Name)
+	assert.Equal(t, "some owner", entry.Messages[0].Fields[3].Options[0].Aggregated[2].Value)
 }
 
 func TestParseIncludingEnumFieldOptions(t *testing.T) {

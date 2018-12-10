@@ -37,9 +37,9 @@ type Import struct {
 }
 
 type Option struct {
-	Name             string   `json:"name,omitempty"`
-	Value            string   `json:"value,omitempty"`
-	AggregatedValues []Option `json:"values,omitempty"`
+	Name       string   `json:"name,omitempty"`
+	Value      string   `json:"value,omitempty"`
+	Aggregated []Option `json:"aggregated,omitempty"`
 }
 
 type Message struct {
@@ -351,7 +351,7 @@ func parseOption(o *proto.Option) Option {
 		Name: o.Name,
 	}
 	if isAggregatedOption(o) {
-		option.AggregatedValues = parseAggregatedValues(o)
+		option.Aggregated = parseAggregatedValues(o)
 	} else {
 		option.Value = o.Constant.Source
 	}
