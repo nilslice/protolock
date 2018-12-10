@@ -117,6 +117,21 @@
                 "name": "description",
                 "type": "string"
               }
+            ],
+            "options": [
+              {
+                "name": "(ext.persisted)",
+                "aggregated": [
+                  {
+                    "name": "opt1",
+                    "value": "true"
+                  },
+                  {
+                    "name": "opt2",
+                    "value": "false"
+                  }
+                ]
+              }
             ]
           },
           {
@@ -145,7 +160,50 @@
               {
                 "id": 3,
                 "name": "description",
-                "type": "string"
+                "type": "string",
+                "options": [
+                  {
+                    "name": "(custom_options_commas)",
+                    "aggregated": [
+                      {
+                        "name": "personal",
+                        "value": "true"
+                      },
+                      {
+                        "name": "internal",
+                        "value": "false"
+                      },
+                      {
+                        "name": "owner",
+                        "value": "some owner"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": 5,
+                "name": "address",
+                "type": "string",
+                "options": [
+                  {
+                    "name": "(custom_options)",
+                    "aggregated": [
+                      {
+                        "name": "personal",
+                        "value": "true"
+                      },
+                      {
+                        "name": "internal",
+                        "value": "false"
+                      },
+                      {
+                        "name": "owner",
+                        "value": "some owner"
+                      }
+                    ]
+                  }
+                ]
               }
             ],
             "maps": [
@@ -170,9 +228,42 @@
                 "value": "true"
               }
             ]
+          },
+          {
+            "name": "FieldOptions",
+            "fields": [
+              {
+                "id": 1,
+                "name": "personal",
+                "type": "bool"
+              },
+              {
+                "id": 2,
+                "name": "internal",
+                "type": "bool"
+              },
+              {
+                "id": 3,
+                "name": "owner",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "google.protobuf.FieldOptions",
+            "fields": [
+              {
+                "id": 50000,
+                "name": "custom_options",
+                "type": "FieldOptions"
+              }
+            ]
           }
         ],
         "imports": [
+          {
+            "path": "google/protobuf/descriptor.proto"
+          },
           {
             "path": "testdata/test.proto"
           }

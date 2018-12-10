@@ -37,8 +37,9 @@ type Import struct {
 }
 
 type Option struct {
-	Name  string `json:"name,omitempty"`
-	Value string `json:"value,omitempty"`
+	Name       string   `json:"name,omitempty"`
+	Value      string   `json:"value,omitempty"`
+	Aggregated []Option `json:"aggregated,omitempty"`
 }
 
 type Message struct {
@@ -326,10 +327,7 @@ func parseMessage(m *proto.Message) Message {
 		}
 
 		if o, ok := v.(*proto.Option); ok {
-			msg.Options = append(msg.Options, Option{
-				Name:  o.Name,
-				Value: o.Constant.Source,
-			})
+			msg.Options = append(msg.Options, parseOption(o))
 		}
 
 		if m, ok := v.(*proto.Message); ok {
@@ -343,12 +341,36 @@ func parseMessage(m *proto.Message) Message {
 func parseOptions(opts []*proto.Option) []Option {
 	var msgOpts []Option
 	for _, o := range opts {
-		msgOpts = append(msgOpts, Option{
-			Name:  o.Name,
-			Value: o.Constant.Source,
-		})
+		msgOpts = append(msgOpts, parseOption(o))
 	}
 	return msgOpts
+}
+
+func parseOption(o *proto.Option) Option {
+	option := Option{
+		Name: o.Name,
+	}
+	if isAggregatedOption(o) {
+		option.Aggregated = parseAggregatedValues(o)
+	} else {
+		option.Value = o.Constant.Source
+	}
+	return option
+}
+
+func parseAggregatedValues(o *proto.Option) []Option {
+	var aggOpts []Option
+	for _, nl := range o.Constant.OrderedMap {
+		aggOpts = append(aggOpts, Option{
+			Name:  nl.Name,
+			Value: nl.Source,
+		})
+	}
+	return aggOpts
+}
+
+func isAggregatedOption(o *proto.Option) bool {
+	return o.Constant.Source == "" && o.Constant.OrderedMap != nil
 }
 
 func protoWithImport(apply func(p *proto.Import)) proto.Handler {
