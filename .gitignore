@@ -6,3 +6,4 @@ plugin-samples/plugin-sample-js/plugin-sample-js
 plugin-samples/plugin-sample-js/package-lock.json
 package-lock.json
 .vscode
+.idea
