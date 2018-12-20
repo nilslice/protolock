@@ -23,6 +23,19 @@ message Channel {
 }
 `
 
+const protoWithPackages = `
+syntax = "proto3";
+
+import "testdata/test.proto";
+
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+`
 const protoWithMessageOptions = `
 syntax = "proto3";
 
@@ -140,6 +153,15 @@ func TestParseIncludingImports(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "testdata/test.proto", entry.Imports[0].Path)
+}
+
+func TestParseIncludingPackage(t *testing.T) {
+	r := strings.NewReader(protoWithPackages)
+
+	entry, err := Parse(r)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "test", entry.Package.Name)
 }
 
 func TestParseIncludingMessageOptions(t *testing.T) {
