@@ -84,23 +84,16 @@ func main() {
 		}
 
 	case "commit":
+		// if force option is false (default), then disallow commit if
+		// there are any warnings encountered by runing a status check.
+		if !*force {
+			status(cfg)
+		}
+
 		r, err := protolock.Commit(*cfg)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
-		}
-
-		// if force option is false (default), then disallow commit if
-		// there are any warnings encountered by runing a status check.
-		if !*force {
-			report, err := protolock.Status(*cfg)
-			if err != nil {
-				handleReport(report, err)
-			}
-
-			if len(report.Warnings) > 0 {
-				os.Exit(1)
-			}
 		}
 
 		err = saveToLockFile(*cfg, r)
@@ -110,28 +103,30 @@ func main() {
 		}
 
 	case "status":
-		report, err := protolock.Status(*cfg)
-		if err != protolock.ErrWarningsFound && err != nil {
-			fmt.Println("[protolock]:", err)
-			os.Exit(1)
-		}
-
-		// if plugins are provided, attempt to execute each as a exeutable
-		// located in the user's OS executable path as reported by stdlib's
-		// exec.LookPath func
-		if *plugins != "" {
-			report, err = runPlugins(*plugins, report)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-		}
-
-		handleReport(report, err)
+		status(cfg)
 
 	default:
 		os.Exit(0)
 	}
+}
+
+func status(cfg *protolock.Config) {
+	report, err := protolock.Status(*cfg)
+	if err != protolock.ErrWarningsFound && err != nil {
+		fmt.Println("[protolock]:", err)
+		os.Exit(1)
+	}
+	// if plugins are provided, attempt to execute each as a executable
+	// located in the user's OS executable path as reported by stdlib's
+	// exec.LookPath func
+	if *plugins != "" {
+		report, err = runPlugins(*plugins, report)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+	handleReport(report, err)
 }
 
 func handleReport(report *protolock.Report, err error) {
