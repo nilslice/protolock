@@ -71,6 +71,8 @@ Options:
 - [Fanatics](https://github.com/fanatics)
 - [Maven Plugin](https://github.com/salesforce/proto-backwards-compat-maven-plugin) by [Salesforce](https://github.com/salesforce)
 - [Istio](https://github.com/istio/api)
+- [Lyft](https://github.com/lyft)
+- [Envoy](https://github.com/envoyproxy)
 
 ## Rules Enforced
 
