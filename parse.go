@@ -92,11 +92,12 @@ type Service struct {
 }
 
 type RPC struct {
-	Name        string `json:"name,omitempty"`
-	InType      string `json:"in_type,omitempty"`
-	OutType     string `json:"out_type,omitempty"`
-	InStreamed  bool   `json:"in_streamed,omitempty"`
-	OutStreamed bool   `json:"out_streamed,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	InType      string   `json:"in_type,omitempty"`
+	OutType     string   `json:"out_type,omitempty"`
+	InStreamed  bool     `json:"in_streamed,omitempty"`
+	OutStreamed bool     `json:"out_streamed,omitempty"`
+	Options     []Option `json:"options,omitempty"`
 }
 
 type Report struct {
@@ -243,6 +244,7 @@ func withService(s *proto.Service) {
 				OutType:     r.ReturnsType,
 				InStreamed:  r.StreamsRequest,
 				OutStreamed: r.StreamsReturns,
+				Options:     parseOptions(r.Options),
 			})
 		}
 	}
