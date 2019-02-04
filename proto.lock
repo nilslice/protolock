@@ -330,6 +330,12 @@
         ],
         "messages": [
           {
+            "name": "TestRequest"
+          },
+          {
+            "name": "TestResponse"
+          },
+          {
             "name": "Channel",
             "fields": [
               {
@@ -467,6 +473,26 @@
           }
         ],
         "services": [
+          {
+            "name": "TestService",
+            "rpcs": [
+              {
+                "name": "TestRpc",
+                "in_type": "TestRequest",
+                "out_type": "TestResponse",
+                "options": [
+                  {
+                    "name": "(test_option)",
+                    "value": "option_value"
+                  },
+                  {
+                    "name": "(test_option_2)",
+                    "value": "option_value_3"
+                  }
+                ]
+              }
+            ]
+          },
           {
             "name": "ChannelChanger",
             "rpcs": [
