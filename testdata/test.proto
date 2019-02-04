@@ -1,6 +1,16 @@
 syntax = "proto3";
 package dataset;
 
+service TestService {
+  rpc TestRpc(TestRequest) returns (TestResponse) {
+    option (test_option) = "option_value";
+    option (test_option_2) = "option_value_3";
+  }
+}
+
+message TestRequest {}
+message TestResponse {}
+
 message Channel {
   reserved 6, 8 to 11;
   int64 id = 1;
@@ -44,7 +54,7 @@ message ContainsEnum {
   enum NestedEnum {
     reserved 101;
     reserved "DEPTH";
-    
+
     ABC = 1;
     DEF = 2;
   }

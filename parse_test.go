@@ -131,6 +131,17 @@ message Channel {
 }
 `
 
+const protoWithRpcOptions = `
+syntax = "proto3";
+
+service TestService {
+	rpc TestRpc (TestRequest) returns (TestResponse) {
+		option (test_option) = "option_value";
+		option (test_option_2) = "option_value_2";
+	}
+}
+`
+
 var gpfPath = filepath.Join("testdata", "getProtoFiles")
 
 func TestParseSingleQuoteReservedNames(t *testing.T) {
@@ -259,6 +270,22 @@ func TestParseIncludingEnumFieldOptions(t *testing.T) {
 	assert.Len(t, entry.Enums[0].EnumFields[2].Options, 1)
 	assert.Equal(t, "(my_enum_value_option)", entry.Enums[0].EnumFields[2].Options[0].Name)
 	assert.Equal(t, "321", entry.Enums[0].EnumFields[2].Options[0].Value)
+}
+
+func TestParseIncludingRpcOptions(t *testing.T) {
+	r := strings.NewReader(protoWithRpcOptions)
+
+	entry, err := Parse(r)
+	assert.NoError(t, err)
+
+	assert.Len(t, entry.Services, 1)
+	assert.Len(t, entry.Services[0].RPCs, 1)
+	assert.Equal(t, "TestRpc", entry.Services[0].RPCs[0].Name)
+	assert.Len(t, entry.Services[0].RPCs[0].Options, 2)
+	assert.Equal(t, "(test_option)", entry.Services[0].RPCs[0].Options[0].Name)
+	assert.Equal(t, "option_value", entry.Services[0].RPCs[0].Options[0].Value)
+	assert.Equal(t, "(test_option_2)", entry.Services[0].RPCs[0].Options[1].Name)
+	assert.Equal(t, "option_value_2", entry.Services[0].RPCs[0].Options[1].Value)
 }
 
 func TestGetProtoFilesFiltersDirectories(t *testing.T) {
