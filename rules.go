@@ -5,18 +5,42 @@ import (
 )
 
 var (
-	// ruleFuncs provides a complete list of all funcs to be run to compare
+	// Rules provides a complete list of all funcs to be run to compare
 	// a set of Protolocks. This list should be updated as new RuleFunc's
 	// are added to this package.
-	ruleFuncs = []RuleFunc{
-		NoUsingReservedFields,
-		NoRemovingReservedFields,
-		NoRemovingFieldsWithoutReserve,
-		NoChangingFieldIDs,
-		NoChangingFieldTypes,
-		NoChangingFieldNames,
-		NoRemovingRPCs,
-		NoChangingRPCSignature,
+	Rules = []Rule{
+		{
+			Name: "NoUsingReservedFields",
+			Func: NoUsingReservedFields,
+		},
+		{
+			Name: "NoRemovingReservedFields",
+			Func: NoRemovingReservedFields,
+		},
+		{
+			Name: "NoRemovingFieldsWithoutReserve",
+			Func: NoRemovingFieldsWithoutReserve,
+		},
+		{
+			Name: "NoChangingFieldIDs",
+			Func: NoChangingFieldIDs,
+		},
+		{
+			Name: "NoChangingFieldTypes",
+			Func: NoChangingFieldTypes,
+		},
+		{
+			Name: "NoChangingFieldNames",
+			Func: NoChangingFieldNames,
+		},
+		{
+			Name: "NoRemovingRPCs",
+			Func: NoRemovingRPCs,
+		},
+		{
+			Name: "NoChangingRPCSignature",
+			Func: NoChangingRPCSignature,
+		},
 	}
 
 	strict = true
@@ -33,6 +57,11 @@ func SetStrict(mode bool) {
 // SetDebug enables the user to toggle debug mode on and off.
 func SetDebug(status bool) {
 	debug = status
+}
+
+type Rule struct {
+	Name string
+	Func RuleFunc
 }
 
 // RuleFunc defines the common signature for a function which can compare
@@ -151,10 +180,6 @@ func incEnumFields(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filep
 // and will return a list of warnings if any message's previously reserved fields
 // or IDs are now being used as part of the same message.
 func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
-	if debug {
-		beginRuleDebug("NoUsingReservedFields")
-	}
-
 	reservedIDMap, reservedNameMap := getReservedFields(cur)
 	reservedEnumIDMap, reservedEnumNameMap := getReservedEnumFields(cur)
 
@@ -272,10 +297,6 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 		}
 	}
 
-	if debug {
-		concludeRuleDebug("NoUsingReservedFields", warnings)
-	}
-
 	if warnings != nil {
 		return warnings, false
 	}
@@ -289,10 +310,6 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 	if !strict {
 		return nil, true
-	}
-
-	if debug {
-		beginRuleDebug("NoRemovingReservedFields")
 	}
 
 	var warnings []Warning
@@ -371,10 +388,6 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 		}
 	}
 
-	if debug {
-		concludeRuleDebug("NoRemovingReservedFields", warnings)
-	}
-
 	if warnings != nil {
 		return warnings, false
 	}
@@ -385,10 +398,6 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 // NoChangingFieldIDs compares the current vs. updated Protolock definitions and
 // will return a list of warnings if any field ID number has been changed.
 func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
-	if debug {
-		beginRuleDebug("NoChangingFieldIDs")
-	}
-
 	var warnings []Warning
 
 	// check all non-reserved message fields
@@ -443,10 +452,6 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 		}
 	}
 
-	if debug {
-		concludeRuleDebug("NoChangingFieldIDs", warnings)
-	}
-
 	if warnings != nil {
 		return warnings, false
 	}
@@ -457,10 +462,6 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 // NoChangingFieldTypes compares the current vs. updated Protolock definitions and
 // will return a list of warnings if any field type has been changed.
 func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
-	if debug {
-		beginRuleDebug("NoChangingFieldTypes")
-	}
-
 	curFieldMap := getFieldMap(cur)
 	updFieldMap := getFieldMap(upd)
 	curMapMap := getMapMap(cur)
@@ -521,10 +522,6 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 		}
 	}
 
-	if debug {
-		concludeRuleDebug("NoChangingFieldTypes", warnings)
-	}
-
 	if warnings != nil {
 		return warnings, false
 	}
@@ -538,10 +535,6 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 	if !strict {
 		return nil, true
-	}
-
-	if debug {
-		beginRuleDebug("NoChangingFieldNames")
 	}
 
 	var warnings []Warning
@@ -598,10 +591,6 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 		}
 	}
 
-	if debug {
-		concludeRuleDebug("NoChangingFieldNames", warnings)
-	}
-
 	if warnings != nil {
 		return warnings, false
 	}
@@ -615,10 +604,6 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
 	if !strict {
 		return nil, true
-	}
-
-	if debug {
-		beginRuleDebug("NoRemovingRPCs")
 	}
 
 	var warnings []Warning
@@ -645,10 +630,6 @@ func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
 		}
 	}
 
-	if debug {
-		concludeRuleDebug("NoRemovingRPCs", warnings)
-	}
-
 	if warnings != nil {
 		return warnings, false
 	}
@@ -660,10 +641,6 @@ func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
 // definitions and will return a list of warnings if any field has been removed
 // without a corresponding reservation of that field name or ID.
 func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
-	if debug {
-		beginRuleDebug("NoRemovingFieldsWithoutReserve")
-	}
-
 	var warnings []Warning
 
 	// check all message fields
@@ -770,10 +747,6 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 		}
 	}
 
-	if debug {
-		concludeRuleDebug("NoRemovingFieldsWithoutReserve", warnings)
-	}
-
 	if warnings != nil {
 		return warnings, false
 	}
@@ -785,10 +758,6 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 // definitions and will return a list of warnings if any RPC signature has been
 // changed while using the same name.
 func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
-	if debug {
-		beginRuleDebug("NoChangingRPCSignature")
-	}
-
 	var warnings []Warning
 	// check that no breaking changes to the signature of an RPC have been
 	// made between the current Protolock and the updated Protolock
@@ -849,10 +818,6 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 				}
 			}
 		}
-	}
-
-	if debug {
-		concludeRuleDebug("NoChangingRPCSignature", warnings)
 	}
 
 	if warnings != nil {
