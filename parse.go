@@ -108,6 +108,7 @@ type Report struct {
 type Warning struct {
 	Filepath Protopath `json:"filepath,omitempty"`
 	Message  string    `json:"message,omitempty"`
+	RuleName string    `json:"rulename,omitempty"`
 }
 
 type ProtoFile struct {
@@ -449,12 +450,21 @@ func compare(current, update Protolock) (*Report, error) {
 		Current: current,
 		Updated: update,
 	}
-	for _, fn := range ruleFuncs {
+	for _, rule := range Rules {
 		wg.Add(1)
 		go func() {
-			if w, ok := fn(current, update); !ok {
-				warnings = append(warnings, w...)
+			if debug {
+				beginRuleDebug(rule.Name)
 			}
+			_warnings, _ := rule.Func(current, update)
+			for _, w := range _warnings {
+				w.RuleName = rule.Name
+			}
+			if debug {
+				concludeRuleDebug(rule.Name, _warnings)
+			}
+
+			warnings = append(warnings, _warnings...)
 			wg.Done()
 		}()
 		wg.Wait()
