@@ -56,6 +56,15 @@ jobs:
             if [ "$MOREERRS" != 3 ]; then
               exit 1
             fi
+      - run: 
+          name: remove a test proto file, expect violations.txt to contain data from plugin-sample
+          command: |
+            set +o pipefail
+
+            rm testdata/test.proto
+            protolock status --plugins=plugin-sample || true # let this fail, don't stop CI
+            stat violations.txt
+            cat violations.txt | grep "Encountered changes in violation of: NoRemovingFieldsWithoutReserve"
             
   plugin_nodejs:
     docker:

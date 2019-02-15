@@ -1,4 +1,4 @@
-./protolock
+protolock
 pkg
 node_modules
 plugin-samples/plugin-sample-js/etc
@@ -7,3 +7,4 @@ plugin-samples/plugin-sample-js/package-lock.json
 package-lock.json
 .vscode
 .idea
+violations.txt

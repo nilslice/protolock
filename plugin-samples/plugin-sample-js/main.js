@@ -2,9 +2,15 @@
 let data = {
     current: {},
     updated: {},
+    protolock_warnings: [{
+        filepath: "",
+        message: "",
+        name: "",
+    }],
     plugin_warnings: [{
         filepath: "",
         message: "",
+        name: "",
     }],
     plugin_error_message: "",
 }
