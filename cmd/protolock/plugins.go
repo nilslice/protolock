@@ -17,9 +17,10 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 	inputData := &bytes.Buffer{}
 
 	err := json.NewEncoder(inputData).Encode(&extend.Data{
-		Current:        report.Current,
-		Updated:        report.Updated,
-		PluginWarnings: []protolock.Warning{},
+		Current:           report.Current,
+		Updated:           report.Updated,
+		ProtolockWarnings: report.Warnings,
+		PluginWarnings:    []protolock.Warning{},
 	})
 	if err != nil {
 		return nil, err

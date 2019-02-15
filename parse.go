@@ -457,8 +457,8 @@ func compare(current, update Protolock) (*Report, error) {
 				beginRuleDebug(rule.Name)
 			}
 			_warnings, _ := rule.Func(current, update)
-			for _, w := range _warnings {
-				w.RuleName = rule.Name
+			for i := range _warnings {
+				_warnings[i].RuleName = rule.Name
 			}
 			if debug {
 				concludeRuleDebug(rule.Name, _warnings)
@@ -505,7 +505,7 @@ func getProtoFiles(root string, ignores string) ([]string, error) {
 					return nil
 				}
 
-				if !strings.HasPrefix(rel, ".." + string(os.PathSeparator)) {
+				if !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 					return nil
 				}
 			}

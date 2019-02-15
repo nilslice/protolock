@@ -21,6 +21,7 @@ type Plugin interface {
 type Data struct {
 	Current            protolock.Protolock `json:"current,omitempty"`
 	Updated            protolock.Protolock `json:"updated,omitempty"`
+	ProtolockWarnings  []protolock.Warning `json:"protolock_warnings,omitempty"`
 	PluginWarnings     []protolock.Warning `json:"plugin_warnings,omitempty"`
 	PluginErrorMessage string              `json:"plugin_error_message,omitempty"`
 }

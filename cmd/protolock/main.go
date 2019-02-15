@@ -131,7 +131,7 @@ func status(cfg *protolock.Config) {
 
 func handleReport(report *protolock.Report, err error) {
 	if len(report.Warnings) > 0 {
-
+		// sort the warnings so they are grouped by file location
 		orderByPathAndMessage(report.Warnings)
 
 		for _, w := range report.Warnings {
