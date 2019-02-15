@@ -495,7 +495,7 @@ func getProtoFiles(root string, ignores string) ([]string, error) {
 					return nil
 				}
 
-				if !strings.HasPrefix(rel, "../") {
+				if !strings.HasPrefix(rel, ".." + string(os.PathSeparator)) {
 					return nil
 				}
 			}
