@@ -121,6 +121,15 @@ warnings if any RPC signature has been changed while using the same name.
 
 ---
 
+## Docker 
+
+```sh
+docker pull nilslice/protolock:latest
+docker run -v $(pwd):/protolock -w /protolock nilslice/protolock init
+```
+
+--
+
 ## Plugins
 The default rules enforced by `protolock` may not cover everything you want to 
 do. If you have custom checks you'd like run on your .proto files, create a 
