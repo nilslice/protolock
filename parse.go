@@ -129,8 +129,9 @@ var (
 	ErrWarningsFound = errors.New("comparison found one or more warnings")
 )
 
-func Parse(r io.Reader) (Entry, error) {
+func Parse(filename string, r io.Reader) (Entry, error) {
 	parser := proto.NewParser(r)
+	parser.Filename(filename)
 	def, err := parser.Parse()
 	if err != nil {
 		return Entry{}, err
@@ -557,7 +558,16 @@ func getUpdatedLock(cfg Config) (*Protolock, error) {
 			return nil, err
 		}
 
-		entry, err := Parse(f)
+		// Have the parser report the file path
+		friendlyPath := path
+		cwd, err := os.Getwd()
+		if err == nil {
+			relpath, err := filepath.Rel(cwd, path)
+			if err == nil {
+				friendlyPath = relpath
+			}
+		}
+		entry, err := Parse(friendlyPath, f)
 		if err != nil {
 			printIfErr(f.Close())
 			return nil, err

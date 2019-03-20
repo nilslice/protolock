@@ -9,9 +9,10 @@ type Config struct {
 	LockDir   string
 	ProtoRoot string
 	Ignore    string
+	UpToDate  bool
 }
 
-func NewConfig(lockDir, protoRoot, ignores string) (*Config, error) {
+func NewConfig(lockDir, protoRoot, ignores string, upToDate bool) (*Config, error) {
 	l, err := filepath.Abs(lockDir)
 	if err != nil {
 		return nil, err
@@ -25,6 +26,7 @@ func NewConfig(lockDir, protoRoot, ignores string) (*Config, error) {
 		LockDir:   l,
 		ProtoRoot: p,
 		Ignore:    ignores,
+		UpToDate:  upToDate,
 	}, nil
 }
 
