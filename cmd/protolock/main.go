@@ -33,6 +33,7 @@ Options:
 	--plugins 		comma-separated list of executable protolock plugin names
 	--lockdir [.]		directory of proto.lock file
 	--protoroot [.]		root of directory tree containing proto files
+	--uptodate [false]	enforce that proto.lock file is up-to-date with proto files
 `
 
 var (
@@ -44,6 +45,7 @@ var (
 	plugins   = options.String("plugins", "", "comma-separated list of executable protolock plugin names")
 	lockDir   = options.String("lockdir", ".", "directory of proto.lock file")
 	protoRoot = options.String("protoroot", ".", "root of directory tree containing proto files")
+	upToDate  = options.Bool("uptodate", false, "enforce that proto.lock file is up-to-date with proto files")
 )
 
 func main() {
@@ -58,7 +60,7 @@ func main() {
 	protolock.SetDebug(*debug)
 	protolock.SetStrict(*strict)
 
-	cfg, err := protolock.NewConfig(*lockDir, *protoRoot, *ignore)
+	cfg, err := protolock.NewConfig(*lockDir, *protoRoot, *ignore, *upToDate)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -111,6 +113,17 @@ func main() {
 
 func status(cfg *protolock.Config) {
 	report, err := protolock.Status(*cfg)
+	if err == protolock.ErrOutOfDate {
+		fmt.Println("[protolock]:", err)
+		fmt.Println("[protolock]: run 'protolock commit'")
+		// Only exit if flag provided for backwards
+		// compatibility
+		if cfg.UpToDate {
+			os.Exit(2)
+		}
+		// Don't report the error twice
+		err = nil
+	}
 	if err != protolock.ErrWarningsFound && err != nil {
 		fmt.Println("[protolock]:", err)
 		os.Exit(1)
