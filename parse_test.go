@@ -142,6 +142,22 @@ service TestService {
 }
 `
 
+const protoWithEntryOptions = `
+syntax = "proto3";
+
+package test;
+
+option java_multiple_files = true;
+option java_package = "test.java.package";
+option java_outer_classname = "TestClass";
+`
+
+const protoWithNoEntryOptions = `
+syntax = "proto3";
+
+package test;
+`
+
 var gpfPath = filepath.Join("testdata", "getProtoFiles")
 
 func TestParseSingleQuoteReservedNames(t *testing.T) {
@@ -286,6 +302,40 @@ func TestParseIncludingRpcOptions(t *testing.T) {
 	assert.Equal(t, "option_value", entry.Services[0].RPCs[0].Options[0].Value)
 	assert.Equal(t, "(test_option_2)", entry.Services[0].RPCs[0].Options[1].Name)
 	assert.Equal(t, "option_value_2", entry.Services[0].RPCs[0].Options[1].Value)
+}
+
+func TestParseWithEntryOptions(t *testing.T) {
+	r := strings.NewReader(protoWithEntryOptions)
+
+	entry, err := Parse(r)
+	assert.NoError(t, err)
+
+	assert.Len(t, entry.Options, 3)
+	assert.Equal(t, "java_multiple_files", entry.Options[0].Name, )
+	assert.Equal(t, "true", entry.Options[0].Value)
+	assert.Equal(t, "java_package", entry.Options[1].Name)
+	assert.Equal(t, "test.java.package", entry.Options[1].Value)
+	assert.Equal(t, "java_outer_classname", entry.Options[2].Name)
+	assert.Equal(t, "TestClass", entry.Options[2].Value)
+}
+
+func TestParseWithoutEntryOptions(t *testing.T) {
+	r := strings.NewReader(protoWithNoEntryOptions)
+
+	entry, err := Parse(r)
+	assert.NoError(t, err)
+
+	assert.Len(t, entry.Options, 0)
+}
+
+func TestParseWithoutEntryOptionsWithRPCOptions(t *testing.T) {
+	r := strings.NewReader(protoWithRpcOptions)
+
+	entry, err := Parse(r)
+	assert.NoError(t, err)
+
+	assert.Len(t, entry.Options, 0)
+	assert.Len(t, entry.Services[0].RPCs[0].Options, 2)
 }
 
 func TestGetProtoFilesFiltersDirectories(t *testing.T) {
