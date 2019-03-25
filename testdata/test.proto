@@ -1,6 +1,10 @@
 syntax = "proto3";
 package dataset;
 
+option java_multiple_files = true;
+option java_package = "test.java.package";
+option java_outer_classname = "TestClass";
+
 service TestService {
   rpc TestRpc(TestRequest) returns (TestResponse) {
     option (test_option) = "option_value";

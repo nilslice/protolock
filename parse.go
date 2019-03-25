@@ -31,6 +31,7 @@ type Entry struct {
 	Services []Service `json:"services,omitempty"`
 	Imports  []Import  `json:"imports,omitempty"`
 	Package  Package   `json:"package,omitempty"`
+	Options  []Option  `json:"options,omitempty"`
 }
 
 type Import struct {
@@ -122,6 +123,7 @@ var (
 	svcs  []Service
 	imps  []Import
 	pkg   Package
+	opts  []Option
 
 	ErrWarningsFound = errors.New("comparison found one or more warnings")
 )
@@ -137,6 +139,7 @@ func Parse(r io.Reader) (Entry, error) {
 	msgs = []Message{}
 	svcs = []Service{}
 	imps = []Import{}
+	opts = []Option{}
 
 	proto.Walk(
 		def,
@@ -145,6 +148,7 @@ func Parse(r io.Reader) (Entry, error) {
 		proto.WithMessage(withMessage),
 		protoWithImport(withImport),
 		protoWithPackage(withPackage),
+		proto.WithOption(withOption),
 	)
 
 	return Entry{
@@ -153,6 +157,7 @@ func Parse(r io.Reader) (Entry, error) {
 		Services: svcs,
 		Imports:  imps,
 		Package:  pkg,
+		Options:  opts,
 	}, nil
 }
 
@@ -347,6 +352,13 @@ func parseMessage(m *proto.Message) Message {
 	}
 
 	return msg
+}
+
+func withOption(o *proto.Option) {
+	if _, ok := o.Parent.(*proto.Proto); !ok {
+		return
+	}
+	opts = append(opts, parseOption(o))
 }
 
 func parseOptions(opts []*proto.Option) []Option {
