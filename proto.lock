@@ -513,7 +513,21 @@
         ],
         "package": {
           "name": "dataset"
-        }
+        },
+        "options": [
+          {
+            "name": "java_multiple_files",
+            "value": "true"
+          },
+          {
+            "name": "java_package",
+            "value": "test.java.package"
+          },
+          {
+            "name": "java_outer_classname",
+            "value": "TestClass"
+          }
+        ]
       }
     }
   ]
