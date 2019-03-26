@@ -121,14 +121,14 @@ func status(cfg *protolock.Config) {
 	if *plugins != "" {
 		report, err = runPlugins(*plugins, report)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("[protolock]:", err)
 			os.Exit(1)
 		}
 	}
 
 	code, err := protolock.HandleReport(report, os.Stdout, err)
-	if err != nil {
-		fmt.Println(err)
+	if err != protolock.ErrWarningsFound && err != nil {
+		fmt.Println("[protolock]:", err)
 		os.Exit(1)
 	}
 
