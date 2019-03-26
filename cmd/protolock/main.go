@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 
 	"github.com/nilslice/protolock"
 )
@@ -126,39 +125,14 @@ func status(cfg *protolock.Config) {
 			os.Exit(1)
 		}
 	}
-	handleReport(report, err)
-}
 
-func handleReport(report *protolock.Report, err error) {
-	if len(report.Warnings) > 0 {
-		// sort the warnings so they are grouped by file location
-		orderByPathAndMessage(report.Warnings)
-
-		for _, w := range report.Warnings {
-			fmt.Fprintf(
-				os.Stdout,
-				"CONFLICT: %s [%s]\n",
-				w.Message, w.Filepath,
-			)
-		}
+	code, err := protolock.HandleReport(report, os.Stdout, err)
+	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func orderByPathAndMessage(warnings []protolock.Warning) {
-	sort.Slice(warnings, func(i, j int) bool {
-		if warnings[i].Filepath < warnings[j].Filepath {
-			return true
-		}
-		if warnings[i].Filepath > warnings[j].Filepath {
-			return false
-		}
-		return warnings[i].Message < warnings[j].Message
-	})
+	os.Exit(code)
 }
 
 func saveToLockFile(cfg protolock.Config, r io.Reader) error {
