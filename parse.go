@@ -102,8 +102,9 @@ type RPC struct {
 }
 
 type Report struct {
-	Current, Updated Protolock `json:"current,omitempty"`
-	Warnings         []Warning `json:"warnings,omitempty"`
+	Current  Protolock `json:"current,omitempty"`
+	Updated  Protolock `json:"updated,omitempty"`
+	Warnings []Warning `json:"warnings,omitempty"`
 }
 
 type Warning struct {
