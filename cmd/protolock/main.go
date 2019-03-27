@@ -132,7 +132,9 @@ func status(cfg *protolock.Config) {
 		os.Exit(1)
 	}
 
-	os.Exit(code)
+	if code != 0 {
+		os.Exit(code)
+	}
 }
 
 func saveToLockFile(cfg protolock.Config, r io.Reader) error {
