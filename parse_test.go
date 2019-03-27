@@ -311,7 +311,7 @@ func TestParseWithEntryOptions(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Len(t, entry.Options, 3)
-	assert.Equal(t, "java_multiple_files", entry.Options[0].Name, )
+	assert.Equal(t, "java_multiple_files", entry.Options[0].Name)
 	assert.Equal(t, "true", entry.Options[0].Value)
 	assert.Equal(t, "java_package", entry.Options[1].Name)
 	assert.Equal(t, "test.java.package", entry.Options[1].Value)

@@ -19,14 +19,14 @@ func TestOrder(t *testing.T) {
 	f, err := os.Open(cfg.LockFilePath())
 	assert.NoError(t, err)
 
-	current, err := protolockFromReader(f)
+	current, err := FromReader(f)
 	assert.NoError(t, err)
 
 	r, err := Commit(*cfg)
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
-	updated, err := protolockFromReader(r)
+	updated, err := FromReader(r)
 	assert.NoError(t, err)
 
 	assert.Equal(t, current, updated)

@@ -23,10 +23,10 @@ func Status(cfg Config) (*Report, error) {
 	}
 	defer lockFile.Close()
 
-	current, err := protolockFromReader(lockFile)
+	current, err := FromReader(lockFile)
 	if err != nil {
 		return nil, err
 	}
 
-	return compare(current, *updated)
+	return Compare(current, *updated)
 }

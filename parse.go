@@ -436,8 +436,8 @@ func openLockFile(cfg Config) (io.ReadCloser, error) {
 	return f, nil
 }
 
-// protolockFromReader unmarshals a proto.lock file into a Protolock struct.
-func protolockFromReader(r io.Reader) (Protolock, error) {
+// FromReader unmarshals a proto.lock file into a Protolock struct.
+func FromReader(r io.Reader) (Protolock, error) {
 	buf := bytes.Buffer{}
 	_, err := io.Copy(&buf, r)
 	if err != nil {
@@ -453,10 +453,10 @@ func protolockFromReader(r io.Reader) (Protolock, error) {
 	return lock, nil
 }
 
-// compare returns a Report struct and an error which indicates that there is
+// Compare returns a Report struct and an error which indicates that there is
 // one or more warnings to report to the caller. If no error is returned, the
 // Report can be ignored.
-func compare(current, update Protolock) (*Report, error) {
+func Compare(current, update Protolock) (*Report, error) {
 	var warnings []Warning
 	var wg sync.WaitGroup
 	report := &Report{
