@@ -22,6 +22,7 @@ message Channel {
   string description = 3;
   string foo = 4;
   int32 age = 5;
+  int32 newnew = 101;
 
   message A { int32 id = 1; }
 

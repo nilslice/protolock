@@ -364,6 +364,11 @@
                 "type": "int32"
               },
               {
+                "id": 101,
+                "name": "newnew",
+                "type": "int32"
+              },
+              {
                 "id": 44,
                 "name": "msg",
                 "type": "A"
