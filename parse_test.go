@@ -163,7 +163,7 @@ var gpfPath = filepath.Join("testdata", "getProtoFiles")
 func TestParseSingleQuoteReservedNames(t *testing.T) {
 	r := strings.NewReader(protoWithSingleQuoteReservedNames)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithSingleQuoteReservedNames", r)
 	assert.NoError(t, err)
 
 	assert.Len(t, entry.Messages[0].ReservedNames, 4)
@@ -176,7 +176,7 @@ func TestParseSingleQuoteReservedNames(t *testing.T) {
 func TestParseIncludingImports(t *testing.T) {
 	r := strings.NewReader(protoWithImports)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithImports", r)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "testdata/test.proto", entry.Imports[0].Path)
@@ -185,7 +185,7 @@ func TestParseIncludingImports(t *testing.T) {
 func TestParseIncludingPackage(t *testing.T) {
 	r := strings.NewReader(protoWithPackages)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithPackages", r)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "test", entry.Package.Name)
@@ -194,7 +194,7 @@ func TestParseIncludingPackage(t *testing.T) {
 func TestParseIncludingMessageOptions(t *testing.T) {
 	r := strings.NewReader(protoWithMessageOptions)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithMessageOptions", r)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "(ext.persisted)", entry.Messages[0].Options[0].Name)
@@ -204,7 +204,7 @@ func TestParseIncludingMessageOptions(t *testing.T) {
 func TestParseIncludingNestedMessageOptions(t *testing.T) {
 	r := strings.NewReader(protoWithNestedMessageOptions)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithNestedMessageOptions", r)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "(ext.persisted)", entry.Messages[0].Options[0].Name)
@@ -219,7 +219,7 @@ func TestParseIncludingNestedMessageOptions(t *testing.T) {
 func TestParseIncludingFieldOptions(t *testing.T) {
 	r := strings.NewReader(protoWithFieldOptions)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithFieldOptions", r)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "(personal)", entry.Messages[0].Fields[1].Options[0].Name)
@@ -237,7 +237,7 @@ func TestParseIncludingFieldOptions(t *testing.T) {
 func TestParseIncludingNestedFieldOptions(t *testing.T) {
 	r := strings.NewReader(protoWithNestedFieldOptions)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithNestedFieldOptions", r)
 	assert.NoError(t, err)
 
 	assert.Len(t, entry.Messages[0].Fields[3].Options, 2)
@@ -250,7 +250,7 @@ func TestParseIncludingNestedFieldOptions(t *testing.T) {
 func TestParseIncludingNestedFieldOptionsAggregated(t *testing.T) {
 	r := strings.NewReader(protoWithNestedFieldOptionsAggregated)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithNestedFieldOptionsAggregated", r)
 	assert.NoError(t, err)
 
 	assert.Len(t, entry.Messages[0].Fields[2].Options, 1)
@@ -274,7 +274,7 @@ func TestParseIncludingNestedFieldOptionsAggregated(t *testing.T) {
 func TestParseIncludingEnumFieldOptions(t *testing.T) {
 	r := strings.NewReader(protoWithEnumFieldOptions)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithEnumFieldOptions", r)
 	assert.NoError(t, err)
 
 	assert.Len(t, entry.Enums, 1)
@@ -291,7 +291,7 @@ func TestParseIncludingEnumFieldOptions(t *testing.T) {
 func TestParseIncludingRpcOptions(t *testing.T) {
 	r := strings.NewReader(protoWithRpcOptions)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithRpcOptions", r)
 	assert.NoError(t, err)
 
 	assert.Len(t, entry.Services, 1)
@@ -307,7 +307,7 @@ func TestParseIncludingRpcOptions(t *testing.T) {
 func TestParseWithEntryOptions(t *testing.T) {
 	r := strings.NewReader(protoWithEntryOptions)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithEntryOptions", r)
 	assert.NoError(t, err)
 
 	assert.Len(t, entry.Options, 3)
@@ -322,7 +322,7 @@ func TestParseWithEntryOptions(t *testing.T) {
 func TestParseWithoutEntryOptions(t *testing.T) {
 	r := strings.NewReader(protoWithNoEntryOptions)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithNoEntryOptions", r)
 	assert.NoError(t, err)
 
 	assert.Len(t, entry.Options, 0)
@@ -331,7 +331,7 @@ func TestParseWithoutEntryOptions(t *testing.T) {
 func TestParseWithoutEntryOptionsWithRPCOptions(t *testing.T) {
 	r := strings.NewReader(protoWithRpcOptions)
 
-	entry, err := Parse(r)
+	entry, err := Parse("test:protoWithRpcOptions", r)
 	assert.NoError(t, err)
 
 	assert.Len(t, entry.Options, 0)
