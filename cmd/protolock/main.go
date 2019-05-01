@@ -114,14 +114,12 @@ func main() {
 func status(cfg *protolock.Config) {
 	report, err := protolock.Status(*cfg)
 	if err == protolock.ErrOutOfDate {
-		fmt.Println("[protolock]:", err)
-		fmt.Println("[protolock]: run 'protolock commit'")
-		// Only exit if flag provided for backwards
-		// compatibility
+		fmt.Println("[protolock]:", err, "run 'protolock commit'")
+		// only exit if flag provided for backwards compatibility
 		if cfg.UpToDate {
 			os.Exit(2)
 		}
-		// Don't report the error twice
+		// don't report the error twice
 		err = nil
 	}
 	if err != protolock.ErrWarningsFound && err != nil {
