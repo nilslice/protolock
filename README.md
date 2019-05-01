@@ -61,9 +61,10 @@ Options:
 	--debug	[false]		enable debug mode and output debug messages
 	--ignore 		comma-separated list of filepaths to ignore
 	--force [false]		forces commit to rewrite proto.lock file and disregards warnings
-	--plugins               comma-separated list of executable protolock plugin names
+	--plugins 		comma-separated list of executable protolock plugin names
 	--lockdir [.]		directory of proto.lock file
 	--protoroot [.]		root of directory tree containing proto files
+	--uptodate [false]	enforce that proto.lock file is up-to-date with proto files
 ```
 
 ## Related Projects & Users
