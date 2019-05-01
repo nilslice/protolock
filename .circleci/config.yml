@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.12
         environment:
           GO111MODULE: "on"
 
@@ -11,7 +11,7 @@ jobs:
     steps:
       - checkout
       # fetch depenencies, test code
-      - run: go get -v -t -d ./...
+      - run: go get -v -d ./...
       - run: go test -v -race ./...
       # install binary, test commands
       - run: go install ./...
@@ -65,7 +65,33 @@ jobs:
             protolock status --plugins=plugin-sample || true # let this fail, don't stop CI
             stat violations.txt
             cat violations.txt | grep "Encountered changes in violation of: NoRemovingFieldsWithoutReserve"
-            
+      - run:
+          name: check if proto.lock is up-to-date with the .proto files in the tree
+          command: |
+            set +o pipefail
+
+            cat >testdata/newProto.proto <<EOL
+            syntax = "proto3";
+            package testdata;
+            message newProto {}
+            EOL
+
+            # checkout to HEAD to revert the changes made by previous tests
+            git reset --hard HEAD
+
+            # basic status check should not fail even though the lock file is 
+            # now technically out of date, compared to the protos
+            protolock status     
+
+            NOCHECK=$(protolock status --uptodate=false | wc -l) # false=default 
+            if [ "$NOCHECK" != 0 ]; then 
+              exit 1
+            fi
+
+            CHECK=$(protolock status --uptodate=true | wc -l)
+            if [ "$CHECK" = 0 ]; then 
+              exit 1
+            fi
   plugin_nodejs:
     docker:
       - image: circleci/node:8
