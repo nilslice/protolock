@@ -80,9 +80,9 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 			}
 
 			// execute the plugin and capture the output
-			output, err := plugin.Output()
+			output, err := plugin.CombinedOutput()
 			if err != nil {
-				pluginErrsChan <- wrapPluginErr(name, path, err)
+				pluginErrsChan <- wrapPluginErr(name, path, err, output)
 				return
 			}
 
@@ -101,7 +101,7 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 
 			if pluginData.PluginErrorMessage != "" {
 				pluginErrsChan <- wrapPluginErr(
-					name, path, errors.New(pluginData.PluginErrorMessage),
+					name, path, errors.New(pluginData.PluginErrorMessage), output,
 				)
 			}
 		}(name)
@@ -126,6 +126,6 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 	return report, nil
 }
 
-func wrapPluginErr(name, path string, err error) error {
-	return fmt.Errorf("%s: %v (%s)", name, err, path)
+func wrapPluginErr(name, path string, err error, output []byte) error {
+	return fmt.Errorf("%s: %v (%s) %s", name, err, path, string(output))
 }
