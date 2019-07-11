@@ -49,11 +49,11 @@ jobs:
             set +o pipefail
 
             ERRS=$(protolock status --plugins=plugin-sample-error,plugin-sample-error | grep "some error" | wc -l)
-            if [ "$ERRS" != 2 ]; then
+            if [ "$ERRS" != 4 ]; then # (4 = 2 * 2, since errors are now reported using 2 lines)
               exit 1
             fi
             MOREERRS=$(protolock status --plugins=plugin-sample-error,plugin-sample-error,plugin-sample-error | grep "some error" | wc -l)
-            if [ "$MOREERRS" != 3 ]; then
+            if [ "$MOREERRS" != 6 ]; then # (6 = 3 * 2, since errors are now reported using 2 lines)
               exit 1
             fi
       - run: 
