@@ -127,5 +127,8 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 }
 
 func wrapPluginErr(name, path string, err error, output []byte) error {
-	return fmt.Errorf("%s: %v (%s) %s", name, err, path, string(output))
+	out := strings.ReplaceAll(
+		string(output), protolock.ProtoSep, protolock.FileSep,
+	)
+	return fmt.Errorf("%s (%s): %v\n%s", name, path, err, out)
 }
