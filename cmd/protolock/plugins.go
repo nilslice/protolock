@@ -89,7 +89,7 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 			pluginData := &extend.Data{}
 			err = json.Unmarshal(output, pluginData)
 			if err != nil {
-				fmt.Println("Get following message:", string(output))
+				fmt.Println("[protolock] Get following message:", string(output))
 				fmt.Println("[protolock] plugin data decode error:", err)
 				return
 			}
