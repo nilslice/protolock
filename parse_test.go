@@ -100,6 +100,8 @@ message Channel {
   string description = 3 [(custom_options_commas) = { personal: true, internal: false, owner: "some owner" }];
   map<string, int32> attributes = 4;
   string address = 5 [(custom_options) = { personal: true internal: false owner: "some owner" }];
+  float array = 6 [(validate.rules).floats = {in: [4.56, 7.89]}];
+  float map = 7 [(validate.rules).keys = {map: { a: [4.56, 7.89], c: d}}];
 }
 `
 
@@ -269,6 +271,18 @@ func TestParseIncludingNestedFieldOptionsAggregated(t *testing.T) {
 	assert.Equal(t, "false", entry.Messages[0].Fields[3].Options[0].Aggregated[1].Value)
 	assert.Equal(t, "owner", entry.Messages[0].Fields[3].Options[0].Aggregated[2].Name)
 	assert.Equal(t, "some owner", entry.Messages[0].Fields[3].Options[0].Aggregated[2].Value)
+	assert.Equal(t, "in", entry.Messages[0].Fields[4].Options[0].Aggregated[0].Name)
+	assert.Equal(t, "", entry.Messages[0].Fields[4].Options[0].Aggregated[0].Value)
+	assert.Equal(t, "4.56", entry.Messages[0].Fields[4].Options[0].Aggregated[0].Aggregated[0].Value)
+	assert.Equal(t, "7.89", entry.Messages[0].Fields[4].Options[0].Aggregated[0].Aggregated[1].Value)
+	assert.Equal(t, "map", entry.Messages[0].Fields[5].Options[0].Aggregated[0].Name)
+	assert.Equal(t, "", entry.Messages[0].Fields[5].Options[0].Aggregated[0].Value)
+	assert.Equal(t, "a", entry.Messages[0].Fields[5].Options[0].Aggregated[0].Aggregated[0].Name)
+	assert.Equal(t, "", entry.Messages[0].Fields[5].Options[0].Aggregated[0].Aggregated[0].Value)
+	assert.Equal(t, "4.56", entry.Messages[0].Fields[5].Options[0].Aggregated[0].Aggregated[0].Aggregated[0].Value)
+	assert.Equal(t, "7.89", entry.Messages[0].Fields[5].Options[0].Aggregated[0].Aggregated[0].Aggregated[1].Value)
+	assert.Equal(t, "c", entry.Messages[0].Fields[5].Options[0].Aggregated[0].Aggregated[1].Name)
+	assert.Equal(t, "d", entry.Messages[0].Fields[5].Options[0].Aggregated[0].Aggregated[1].Value)
 }
 
 func TestParseIncludingEnumFieldOptions(t *testing.T) {

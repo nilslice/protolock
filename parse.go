@@ -372,30 +372,37 @@ func parseOptions(opts []*proto.Option) []Option {
 }
 
 func parseOption(o *proto.Option) Option {
-	option := Option{
-		Name: o.Name,
-	}
-	if isAggregatedOption(o) {
-		option.Aggregated = parseAggregatedValues(o)
-	} else {
-		option.Value = o.Constant.Source
-	}
-	return option
+	return recurseLiteral(o.Name, &o.Constant)
 }
 
-func parseAggregatedValues(o *proto.Option) []Option {
-	var aggOpts []Option
-	for _, nl := range o.Constant.OrderedMap {
-		aggOpts = append(aggOpts, Option{
-			Name:  nl.Name,
-			Value: nl.Source,
-		})
-	}
-	return aggOpts
-}
+func recurseLiteral(name string, lit *proto.Literal) Option {
 
-func isAggregatedOption(o *proto.Option) bool {
-	return o.Constant.Source == "" && o.Constant.OrderedMap != nil
+	if lit.OrderedMap != nil {
+		var opts []Option
+		for _, l := range lit.OrderedMap {
+			opts = append(opts, recurseLiteral(l.Name, l.Literal))
+		}
+		return Option{
+			Name:       name,
+			Aggregated: opts,
+		}
+	}
+
+	if lit.Array != nil {
+		var opts []Option
+		for _, l := range lit.Array {
+			opts = append(opts, recurseLiteral("", l))
+		}
+		return Option{
+			Name:       name,
+			Aggregated: opts,
+		}
+	}
+
+	return Option{
+		Name:  name,
+		Value: lit.Source,
+	}
 }
 
 func protoWithImport(apply func(p *proto.Import)) proto.Handler {
