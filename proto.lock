@@ -212,6 +212,30 @@
                       {
                         "name": "owner",
                         "value": "some owner"
+                      },
+                      {
+                        "name": "arr",
+                        "aggregated": [
+                          {
+                            "value": "1.2"
+                          },
+                          {
+                            "value": "3.4"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "map",
+                        "aggregated": [
+                          {
+                            "name": "a",
+                            "value": "b"
+                          },
+                          {
+                            "name": "c",
+                            "value": "d"
+                          }
+                        ]
                       }
                     ]
                   }
