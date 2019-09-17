@@ -81,3 +81,5 @@ service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
   rpc Previous(PreviousRequest) returns (stream Channel);
 }
+
+message FloatIn { float val = 1 [(validate.rules).float = {in: [4.56, 7.89]}]; }

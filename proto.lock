@@ -499,6 +499,34 @@
                 "type": "bool"
               }
             ]
+          },
+          {
+            "name": "FloatIn",
+            "fields": [
+              {
+                "id": 1,
+                "name": "val",
+                "type": "float",
+                "options": [
+                  {
+                    "name": "(validate.rules).float",
+                    "aggregated": [
+                      {
+                        "name": "in",
+                        "aggregated": [
+                          {
+                            "value": "4.56"
+                          },
+                          {
+                            "value": "7.89"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
           }
         ],
         "services": [
