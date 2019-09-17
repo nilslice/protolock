@@ -17,7 +17,7 @@ message Channel2 {
   string name = 2 [(personal) = true, (owner) = 'test'];
   string description = 3 [(custom_options_commas) = { personal: true, internal: false, owner: "some owner" }];
   map<string, int32> map = 4 [(personal) = true];
-  string address = 5 [(custom_options) = { personal: true internal: false owner: "some owner" }];
+  string address = 5 [(custom_options) = { personal: true internal: false owner: "some owner", arr: [1.2, 3.4], map: { a:b, c:d } }];
 }
 
 enum TestEnumOption {

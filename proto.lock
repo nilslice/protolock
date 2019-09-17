@@ -212,6 +212,30 @@
                       {
                         "name": "owner",
                         "value": "some owner"
+                      },
+                      {
+                        "name": "arr",
+                        "aggregated": [
+                          {
+                            "value": "1.2"
+                          },
+                          {
+                            "value": "3.4"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "map",
+                        "aggregated": [
+                          {
+                            "name": "a",
+                            "value": "b"
+                          },
+                          {
+                            "name": "c",
+                            "value": "d"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -473,6 +497,34 @@
                 "id": 9,
                 "name": "is_active",
                 "type": "bool"
+              }
+            ]
+          },
+          {
+            "name": "FloatIn",
+            "fields": [
+              {
+                "id": 1,
+                "name": "val",
+                "type": "float",
+                "options": [
+                  {
+                    "name": "(validate.rules).float",
+                    "aggregated": [
+                      {
+                        "name": "in",
+                        "aggregated": [
+                          {
+                            "value": "4.56"
+                          },
+                          {
+                            "value": "7.89"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           }

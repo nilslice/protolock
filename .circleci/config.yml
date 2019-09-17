@@ -92,6 +92,14 @@ jobs:
             if [ "$CHECK" = 0 ]; then 
               exit 1
             fi
+      - run:
+          name: check that proto.lock records aggregate options with array values
+          command: | 
+            set +o pipefail
+
+            rm proto.lock && protolock init
+            cat proto.lock | grep "4.56"
+            cat proto.lock | grep "7.89"
   plugin_nodejs:
     docker:
       - image: circleci/node:8
