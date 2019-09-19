@@ -13,7 +13,13 @@ import (
 	"github.com/nilslice/protolock/extend"
 )
 
-func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report, error) {
+const logPrefix = "[protolock]"
+
+func runPlugins(
+	pluginList string,
+	report *protolock.Report,
+	debug bool,
+) (*protolock.Report, error) {
 	inputData := &bytes.Buffer{}
 
 	err := json.NewEncoder(inputData).Encode(&extend.Data{
@@ -68,7 +74,7 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 				if path == "" {
 					path = name
 				}
-				fmt.Println("[protolock] plugin exec error:", err)
+				fmt.Println(logPrefix, name, "plugin exec error:", err)
 				return
 			}
 
@@ -89,8 +95,14 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 			pluginData := &extend.Data{}
 			err = json.Unmarshal(output, pluginData)
 			if err != nil {
-				fmt.Println("[protolock] Get following message:", string(output))
-				fmt.Println("[protolock] plugin data decode error:", err)
+				fmt.Println(logPrefix, name, "plugin data decode error:", err)
+				// TODO: depending on the plugin, "output" could be quite
+				// verbose, though may not warrant debug flag guard.
+				if debug {
+					fmt.Println(
+						logPrefix, name, "plugin output:", string(output),
+					)
+				}
 				return
 			}
 
@@ -102,7 +114,10 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 
 			if pluginData.PluginErrorMessage != "" {
 				pluginErrsChan <- wrapPluginErr(
-					name, path, errors.New(pluginData.PluginErrorMessage), output,
+					name,
+					path,
+					errors.New(pluginData.PluginErrorMessage),
+					output,
 				)
 			}
 		}(name)
@@ -118,8 +133,7 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 		}
 
 		return nil, fmt.Errorf(
-			`[protolock:plugin] accumulated plugin errors:
-%s`,
+			"accumulated plugin errors: \n%s",
 			strings.Join(errorMsgs, "\n"),
 		)
 	}
@@ -128,8 +142,11 @@ func runPlugins(pluginList string, report *protolock.Report) (*protolock.Report,
 }
 
 func wrapPluginErr(name, path string, err error, output []byte) error {
-	out := strings.ReplaceAll(
-		string(output), protolock.ProtoSep, protolock.FileSep,
+	return fmt.Errorf(
+		"%s (%s): %v\n%s",
+		name, path, err, strings.ReplaceAll(
+			string(output),
+			protolock.ProtoSep, protolock.FileSep,
+		),
 	)
-	return fmt.Errorf("%s (%s): %v\n%s", name, path, err, out)
 }
