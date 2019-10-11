@@ -901,6 +901,25 @@ func getReservedEnumFields(lock Protolock) (lockIDsMap, lockNamesMap) {
 	return reservedIDMap, reservedNameMap
 }
 
+func getFieldIDNameRecursive(fieldIDNameMap lockFieldIDNameMap, filepath Protopath, prefix string, msg Message) {
+	msgName := prefix + msg.Name
+	for _, field := range msg.Fields {
+		if fieldIDNameMap[filepath][msgName] == nil {
+			fieldIDNameMap[filepath][msgName] = make(map[int]string)
+		}
+		fieldIDNameMap[filepath][msgName][field.ID] = field.Name
+	}
+	for _, mp := range msg.Maps {
+		if fieldIDNameMap[filepath][msgName] == nil {
+			fieldIDNameMap[filepath][msgName] = make(map[int]string)
+		}
+		fieldIDNameMap[filepath][msgName][mp.Field.ID] = mp.Field.Name
+	}
+	for _, nestedMsg := range msg.Messages {
+		getFieldIDNameRecursive(fieldIDNameMap, filepath, msgName + nestedPrefix, nestedMsg)
+	}
+}
+
 // getFieldsIDName gets all the fields mapped by the field ID to its name for
 // all messages.
 func getFieldsIDName(lock Protolock) lockFieldIDNameMap {
@@ -911,18 +930,7 @@ func getFieldsIDName(lock Protolock) lockFieldIDNameMap {
 			fieldIDNameMap[def.Filepath] = make(map[string]map[int]string)
 		}
 		for _, msg := range def.Def.Messages {
-			for _, field := range msg.Fields {
-				if fieldIDNameMap[def.Filepath][msg.Name] == nil {
-					fieldIDNameMap[def.Filepath][msg.Name] = make(map[int]string)
-				}
-				fieldIDNameMap[def.Filepath][msg.Name][field.ID] = field.Name
-			}
-			for _, mp := range msg.Maps {
-				if fieldIDNameMap[def.Filepath][msg.Name] == nil {
-					fieldIDNameMap[def.Filepath][msg.Name] = make(map[int]string)
-				}
-				fieldIDNameMap[def.Filepath][msg.Name][mp.Field.ID] = mp.Field.Name
-			}
+			getFieldIDNameRecursive(fieldIDNameMap, def.Filepath, "", msg)
 		}
 	}
 
@@ -951,6 +959,25 @@ func getEnumFieldsIDName(lock Protolock) lockFieldIDNameMap {
 	return fieldIDNameMap
 }
 
+func getNonReservedFieldsRecursive(nameIDMap lockNamesMap, filepath Protopath, prefix string, msg Message) {
+	msgName := prefix + msg.Name
+	for _, field := range msg.Fields {
+		if nameIDMap[filepath][msgName] == nil {
+			nameIDMap[filepath][msgName] = make(map[string]int)
+		}
+		nameIDMap[filepath][msgName][field.Name] = field.ID
+	}
+	for _, mp := range msg.Maps {
+		if nameIDMap[filepath][msgName] == nil {
+			nameIDMap[filepath][msgName] = make(map[string]int)
+		}
+		nameIDMap[filepath][msgName][mp.Field.Name] = mp.Field.ID
+	}
+	for _, nestedMsg := range msg.Messages {
+		getNonReservedFieldsRecursive(nameIDMap, filepath, msgName+nestedPrefix, nestedMsg)
+	}
+}
+
 // getNonReservedFields gets all the non-reserved field numbers and names, and
 // stashes them in a lockNamesMap to be checked against.
 func getNonReservedFields(lock Protolock) lockNamesMap {
@@ -961,18 +988,7 @@ func getNonReservedFields(lock Protolock) lockNamesMap {
 			nameIDMap[def.Filepath] = make(map[string]map[string]int)
 		}
 		for _, msg := range def.Def.Messages {
-			for _, field := range msg.Fields {
-				if nameIDMap[def.Filepath][msg.Name] == nil {
-					nameIDMap[def.Filepath][msg.Name] = make(map[string]int)
-				}
-				nameIDMap[def.Filepath][msg.Name][field.Name] = field.ID
-			}
-			for _, mp := range msg.Maps {
-				if nameIDMap[def.Filepath][msg.Name] == nil {
-					nameIDMap[def.Filepath][msg.Name] = make(map[string]int)
-				}
-				nameIDMap[def.Filepath][msg.Name][mp.Field.Name] = mp.Field.ID
-			}
+			getNonReservedFieldsRecursive(nameIDMap, def.Filepath, "", msg)
 		}
 	}
 
@@ -1001,6 +1017,20 @@ func getNonReservedEnumFields(lock Protolock) lockNamesMap {
 	return nameIDMap
 }
 
+func getMapMapRecursive(nameTypeMap lockMapMap, filepath Protopath, prefix string, msg Message) {
+	msgName := prefix + msg.Name
+	for _, mp := range msg.Maps {
+		if nameTypeMap[filepath][msgName] == nil {
+			nameTypeMap[filepath][msgName] = make(map[string]Map)
+		}
+		nameTypeMap[filepath][msgName][mp.Field.Name] = mp
+	}
+	for _, nestedMsg := range msg.Messages {
+
+		getMapMapRecursive(nameTypeMap, filepath, msgName + nestedPrefix, nestedMsg)
+	}
+}
+
 // getMapMap gets all the map names and types, and stashes them in a
 // lockMapMap to be checked against.
 func getMapMap(lock Protolock) lockMapMap {
@@ -1011,16 +1041,30 @@ func getMapMap(lock Protolock) lockMapMap {
 			nameTypeMap[def.Filepath] = make(map[string]map[string]Map)
 		}
 		for _, msg := range def.Def.Messages {
-			for _, mp := range msg.Maps {
-				if nameTypeMap[def.Filepath][msg.Name] == nil {
-					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Map)
-				}
-				nameTypeMap[def.Filepath][msg.Name][mp.Field.Name] = mp
-			}
+			getMapMapRecursive(nameTypeMap, def.Filepath, "", msg)
 		}
 	}
 
 	return nameTypeMap
+}
+
+func getFieldMapRecursive(nameTypeMap lockFieldMap, filepath Protopath, prefix string, msg Message) {
+	msgName := prefix + msg.Name
+	for _, field := range msg.Fields {
+		if nameTypeMap[filepath][msgName] == nil {
+			nameTypeMap[filepath][msgName] = make(map[string]Field)
+		}
+		nameTypeMap[filepath][msgName][field.Name] = field
+	}
+	for _, mp := range msg.Maps {
+		if nameTypeMap[filepath][msgName] == nil {
+			nameTypeMap[filepath][msgName] = make(map[string]Field)
+		}
+		nameTypeMap[filepath][msgName][mp.Field.Name] = mp.Field
+	}
+	for _, nestedMsg := range msg.Messages {
+		getFieldMapRecursive(nameTypeMap, filepath, msgName + nestedPrefix, nestedMsg)
+	}
 }
 
 // getFieldMap gets all the field names and types, and stashes them in a
@@ -1033,18 +1077,7 @@ func getFieldMap(lock Protolock) lockFieldMap {
 			nameTypeMap[def.Filepath] = make(map[string]map[string]Field)
 		}
 		for _, msg := range def.Def.Messages {
-			for _, field := range msg.Fields {
-				if nameTypeMap[def.Filepath][msg.Name] == nil {
-					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Field)
-				}
-				nameTypeMap[def.Filepath][msg.Name][field.Name] = field
-			}
-			for _, mp := range msg.Maps {
-				if nameTypeMap[def.Filepath][msg.Name] == nil {
-					nameTypeMap[def.Filepath][msg.Name] = make(map[string]Field)
-				}
-				nameTypeMap[def.Filepath][msg.Name][mp.Field.Name] = mp.Field
-			}
+			getFieldMapRecursive(nameTypeMap, def.Filepath, "", msg)
 		}
 	}
 

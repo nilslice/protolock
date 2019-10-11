@@ -254,6 +254,44 @@ service ChannelChanger {
 }
 `
 
+const noRemoveReservedFieldsNestedMessageProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  reserved 44, 101, 103 to 110;
+  reserved "no_more", "goodbye";
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+
+  message Nested {
+    reserved 1,2;
+    string id = 3;
+  }
+}
+`
+
+const removeReservedFieldsNestedMessageProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  reserved 44, 101, 103 to 110;
+  reserved "no_more", "goodbye";
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+
+  message Nested {
+    reserved 1;
+    string id = 3;
+  }
+}
+`
+
 const noChangeFieldIDsProto = `syntax = "proto3";
 package test;
 
@@ -346,6 +384,34 @@ service ChannelChanger {
 }
 `
 
+const noChangeFieldIDsNestedMessageProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  
+  message Nested {
+    string foo = 1;
+    bool bar = 2;
+  }
+}`
+
+const changeFieldIDsNestedMessageProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  
+  message Nested {
+    string foo = 11;
+    bool bar = 22;
+  }
+}`
+
 const noChangingFieldTypesProto = `syntax = "proto3";
 package test;
 
@@ -410,6 +476,36 @@ message PreviousRequest {
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
   rpc Previous(PreviousRequest) returns (stream Channel);
+}
+`
+
+const noChangingFieldTypesNestedMessageProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  message Nested {
+    string foo = 1;
+    bool bar = 2;
+    map<string, int32> n_map = 3;
+  }
+}
+`
+
+const changingFieldTypesNestedMessageProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  message Nested {
+    int64 foo = 1;
+    bool bar = 2;
+    map<int32, int64> n_map = 3;
+  }
 }
 `
 
@@ -493,6 +589,34 @@ enum AnotherEnum {
 service ChannelChanger {
   rpc Next(stream NextRequest) returns (Channel);
   rpc Previous(PreviousRequest) returns (stream Channel);
+}
+`
+
+const noChangingFieldNamesNestedMessageProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  message Nested {
+    string foo = 1;
+    bool bar = 2;
+  }
+}
+`
+
+const changingFieldNamesNestedMessageProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  message Nested {
+    string foo_baz = 1;
+    bool bar = 2;
+  }
 }
 `
 
@@ -656,6 +780,39 @@ service ChannelChanger {
 }
 `
 
+const noRemovingFieldsWithoutReserveNestedMessageProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+
+  message Nested {
+    string id = 1;
+    string name = 2;
+  }
+}
+`
+
+const removingFieldsWithoutReserveNestedMessageProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string foo = 4;
+  bool bar = 5;
+
+  message Nested {
+    string name = 2;
+  }
+}
+`
+
 const noConflictSameNameNestedMessages = `syntax = "proto3";
 package main;
 
@@ -750,6 +907,16 @@ func TestChangingFieldNames(t *testing.T) {
 	assert.Len(t, warnings, 0)
 }
 
+func TestChangingFieldNamesNestedMessages(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noChangingFieldNamesNestedMessageProto)
+	updLock := parseTestProto(t, changingFieldNamesNestedMessageProto)
+
+	warnings, ok := NoChangingFieldNames(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 1)
+}
+
 func TestChangingFieldTypes(t *testing.T) {
 	SetDebug(true)
 	curLock := parseTestProto(t, noChangingFieldTypesProto)
@@ -762,6 +929,16 @@ func TestChangingFieldTypes(t *testing.T) {
 	warnings, ok = NoChangingFieldTypes(updLock, updLock)
 	assert.True(t, ok)
 	assert.Len(t, warnings, 0)
+}
+
+func TestChangingFieldTypesNestedMessages(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noChangingFieldTypesNestedMessageProto)
+	updLock := parseTestProto(t, changingFieldTypesNestedMessageProto)
+
+	warnings, ok := NoChangingFieldTypes(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 3)
 }
 
 func TestUsingReservedFields(t *testing.T) {
@@ -792,6 +969,21 @@ func TestRemovingReservedFields(t *testing.T) {
 	assert.Len(t, warnings, 0)
 }
 
+func TestRemovingReservedFieldsNestedMessages(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noRemoveReservedFieldsNestedMessageProto)
+	updLock := parseTestProto(t, removeReservedFieldsNestedMessageProto)
+
+	warnings, ok := NoRemovingReservedFields(curLock, updLock)
+	assert.False(t, ok)
+	// reserved ID '2' was removed from the Channel.Nested message
+	assert.Len(t, warnings, 1)
+
+	warnings, ok = NoRemovingReservedFields(updLock, updLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
+}
+
 func TestChangingFieldIDs(t *testing.T) {
 	SetDebug(true)
 	curLock := parseTestProto(t, noChangeFieldIDsProto)
@@ -806,6 +998,17 @@ func TestChangingFieldIDs(t *testing.T) {
 	assert.Len(t, warnings, 0)
 }
 
+func TestChangingFieldIdsNestedMessages(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noChangeFieldIDsNestedMessageProto)
+	updLock := parseTestProto(t, changeFieldIDsNestedMessageProto)
+
+	warnings, ok := NoChangingFieldIDs(curLock, updLock)
+	assert.False(t, ok)
+	// fields `foo` and `bar` of `Channel.Nested` message have different fieldIds.
+	assert.Len(t, warnings, 2)
+}
+
 func TestRemovingFieldsWithoutReserve(t *testing.T) {
 	SetDebug(true)
 	curLock := parseTestProto(t, noRemovingFieldsWithoutReserveProto)
@@ -818,6 +1021,16 @@ func TestRemovingFieldsWithoutReserve(t *testing.T) {
 	warnings, ok = NoRemovingFieldsWithoutReserve(updLock, updLock)
 	assert.True(t, ok)
 	assert.Len(t, warnings, 0)
+}
+
+func TestRemovingFieldsWithoutReserveNestedMessages(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, noRemovingFieldsWithoutReserveNestedMessageProto)
+	updLock := parseTestProto(t, removingFieldsWithoutReserveNestedMessageProto)
+
+	warnings, ok := NoRemovingFieldsWithoutReserve(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 2)
 }
 
 func TestNoConflictSameNameNestedMessages(t *testing.T) {
