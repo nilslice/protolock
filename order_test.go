@@ -11,7 +11,7 @@ import (
 const ignoreArg = ""
 
 func TestOrder(t *testing.T) {
-	cfg, err := NewConfig(".", ".", ignoreArg, false)
+	cfg, err := NewConfig(".", ".", ignoreArg, false, false)
 	assert.NoError(t, err)
 
 	// verify that the re-production of the same Protolock encoded as json

@@ -60,7 +60,13 @@ func main() {
 	protolock.SetDebug(*debug)
 	protolock.SetStrict(*strict)
 
-	cfg, err := protolock.NewConfig(*lockDir, *protoRoot, *ignore, *upToDate)
+	cfg, err := protolock.NewConfig(
+		*lockDir,
+		*protoRoot,
+		*ignore,
+		*upToDate,
+		*debug,
+	)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -114,7 +120,7 @@ func main() {
 func status(cfg *protolock.Config) {
 	report, err := protolock.Status(*cfg)
 	if err == protolock.ErrOutOfDate {
-		fmt.Println("[protolock]:", err, "run 'protolock commit'")
+		fmt.Println(logPrefix, "error:", err, "run 'protolock commit'")
 		// only exit if flag provided for backwards compatibility
 		if cfg.UpToDate {
 			os.Exit(2)
@@ -123,23 +129,23 @@ func status(cfg *protolock.Config) {
 		err = nil
 	}
 	if err != protolock.ErrWarningsFound && err != nil {
-		fmt.Println("[protolock]:", err)
+		fmt.Println(logPrefix, "error:", err)
 		os.Exit(1)
 	}
 	// if plugins are provided, attempt to execute each as a executable
 	// located in the user's OS executable path as reported by stdlib's
 	// exec.LookPath func
 	if *plugins != "" {
-		report, err = runPlugins(*plugins, report)
+		report, err = runPlugins(*plugins, report, *debug)
 		if err != nil {
-			fmt.Println("[protolock]:", err)
+			fmt.Println(logPrefix, "error:", err)
 			os.Exit(1)
 		}
 	}
 
 	code, err := protolock.HandleReport(report, os.Stdout, err)
 	if err != protolock.ErrWarningsFound && err != nil {
-		fmt.Println("[protolock]:", err)
+		fmt.Println(logPrefix, "error:", err)
 		os.Exit(1)
 	}
 
