@@ -34,6 +34,14 @@ message Channel {
   int64 id = 1;
   string name = 2;
   string description = 3;
+
+  message InChannel {
+    reserved 4;
+    reserved "not_here";
+    string name = 1;
+    int64 id = 2;
+    bool foo = 3;
+  }
 }
 
 message Request {
@@ -103,6 +111,13 @@ message Channel {
     int32 id = 1;
     string name = 2;
   }
+
+  message InChannel {
+    string name = 1;
+    int64 id = 2;
+    bool foo = 3;
+    bool not_here = 4;
+  }
 }
 
 message Request {
@@ -168,6 +183,14 @@ message Channel {
   string description = 3;
   string foo = 4;
   bool bar = 5;
+
+  message InChannel {
+    reserved 4;
+    reserved "not_here";
+    string name = 1;
+    int64 id = 2;
+    bool foo = 3;
+  }
 }
 
 message NextRequest {
@@ -221,6 +244,12 @@ message Channel {
   string description = 3;
   string foo = 4;
   bool bar = 5;
+
+  message InChannel {
+    string name = 1;
+    int64 id = 2;
+    bool foo = 3;
+  }
 }
 
 message NextRequest {
@@ -301,6 +330,11 @@ message Channel {
   string description = 3;
   string foo = 4;
   bool bar = 5;
+
+  message InChannel {
+    string name = 1;
+    book is_active = 2;
+  }
 }
 
 message NextRequest {
@@ -347,6 +381,11 @@ message Channel {
   string description = 3;
   string foo = 4443;
   bool bar = 59;
+
+  message InChannel {
+    string name = 444;
+    book is_active = 2;
+  }
 }
 
 message NextRequest {
@@ -707,6 +746,12 @@ message Channel {
   string description = 3;
   string foo = 4;
   bool bar = 5;
+
+  message InChannel {
+    string name = 1;
+    int64 id = 2;
+    bool foo = 3;
+  }
 }
 
 message NextRequest {
@@ -750,6 +795,10 @@ message Channel {
   string name_new = 2;
   string description = 3;
   string foo = 4;
+
+  message InChannel {
+    bool foo = 3;
+  }
 }
 
 message NextRequest {
@@ -948,7 +997,7 @@ func TestUsingReservedFields(t *testing.T) {
 
 	warnings, ok := NoUsingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 15)
+	assert.Len(t, warnings, 17)
 
 	warnings, ok = NoUsingReservedFields(updLock, updLock)
 	assert.True(t, ok)
@@ -962,7 +1011,7 @@ func TestRemovingReservedFields(t *testing.T) {
 
 	warnings, ok := NoRemovingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 13)
+	assert.Len(t, warnings, 15)
 
 	warnings, ok = NoRemovingReservedFields(updLock, updLock)
 	assert.True(t, ok)
@@ -976,7 +1025,6 @@ func TestRemovingReservedFieldsNestedMessages(t *testing.T) {
 
 	warnings, ok := NoRemovingReservedFields(curLock, updLock)
 	assert.False(t, ok)
-	// reserved ID '2' was removed from the Channel.Nested message
 	assert.Len(t, warnings, 1)
 
 	warnings, ok = NoRemovingReservedFields(updLock, updLock)
@@ -991,7 +1039,7 @@ func TestChangingFieldIDs(t *testing.T) {
 
 	warnings, ok := NoChangingFieldIDs(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 7)
+	assert.Len(t, warnings, 8)
 
 	warnings, ok = NoChangingFieldIDs(updLock, updLock)
 	assert.True(t, ok)
@@ -1005,7 +1053,6 @@ func TestChangingFieldIdsNestedMessages(t *testing.T) {
 
 	warnings, ok := NoChangingFieldIDs(curLock, updLock)
 	assert.False(t, ok)
-	// fields `foo` and `bar` of `Channel.Nested` message have different fieldIds.
 	assert.Len(t, warnings, 2)
 }
 
@@ -1016,7 +1063,7 @@ func TestRemovingFieldsWithoutReserve(t *testing.T) {
 
 	warnings, ok := NoRemovingFieldsWithoutReserve(curLock, updLock)
 	assert.False(t, ok)
-	assert.Len(t, warnings, 9)
+	assert.Len(t, warnings, 13)
 
 	warnings, ok = NoRemovingFieldsWithoutReserve(updLock, updLock)
 	assert.True(t, ok)
