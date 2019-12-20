@@ -75,6 +75,11 @@ Options:
 - [Lyft](https://github.com/lyft)
 - [Envoy](https://github.com/envoyproxy)
 - [Netflix](https://github.com/Netflix)
+- [VMware](https://github.com/vmware/hamlet)
+- [Storj](https://github.com/storj/storj)
+- [Token.io](https://github.com/tokenio/merchant-proxy)
+- [Openbase](https://github.com/openbase/type)
+- [Zeebee](https://github.com/zeebe-io/zeebe)
 
 ## Rules Enforced
 
