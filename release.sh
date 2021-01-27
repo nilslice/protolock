@@ -14,6 +14,7 @@ function build() {
   os=$1
   arch=$2
 
+  extension=''
   if [ "${os}" == 'windows' ]
   then
     extension='.exe'
@@ -41,3 +42,4 @@ for os in darwin linux windows
 do
   build "${os}" amd64
 done
+build linux arm64
