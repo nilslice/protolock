@@ -43,3 +43,4 @@ do
   build "${os}" amd64
 done
 build linux arm64
+build darwin arm64
