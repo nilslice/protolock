@@ -9,3 +9,4 @@ package-lock.json
 .vscode
 .idea
 violations.txt
+.DS_Store
