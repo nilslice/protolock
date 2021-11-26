@@ -38,11 +38,19 @@ In all, prevent yourself from compiling your protobufs and generating code if br
 **Recommended:** commit the output `proto.lock` file into your version control system
 
 ## Install
-If you have [Go](https://golang.org) installed, you can install `protolock` by
-running:
-```bash
-go get -u github.com/nilslice/protolock/...
-```
+If you have [Go](https://golang.org) installed, you can install `protolock` by running:
+
+- Go >= 1.17:
+
+	```bash
+	go install github.com/nilslice/protolock/cmd/protolock@latest
+	```
+
+- Go < 1.17:
+
+	```bash
+	go get github.com/nilslice/protolock/cmd/protolock
+	```
 
 Otherwise, download a pre-built binary for Windows, macOS, or Linux from the [latest release](https://github.com/nilslice/protolock/releases/latest) page.
 
