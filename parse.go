@@ -83,6 +83,8 @@ type Field struct {
 	Name       string   `json:"name,omitempty"`
 	Type       string   `json:"type,omitempty"`
 	IsRepeated bool     `json:"is_repeated,omitempty"`
+	IsOptional bool     `json:"optional,omitempty"`
+	IsRequired bool     `json:"required,omitempty"`
 	Options    []Option `json:"options,omitempty"`
 }
 
@@ -291,6 +293,8 @@ func parseMessage(m *proto.Message) Message {
 				Name:       f.Name,
 				Type:       f.Type,
 				IsRepeated: f.Repeated,
+				IsOptional: f.Optional,
+				IsRequired: f.Required,
 				Options:    parseOptions(f.Options),
 			})
 		}

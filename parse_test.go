@@ -133,6 +133,17 @@ message Channel {
 }
 `
 
+const protoWithRequiredAndOptionalFields = `
+syntax = "proto2";
+
+package test;
+
+message Channel {
+  required int64 id = 1;
+  optional string name = 2;
+}
+`
+
 const protoWithRpcOptions = `
 syntax = "proto3";
 
@@ -173,6 +184,16 @@ func TestParseSingleQuoteReservedNames(t *testing.T) {
 		[]string{"thing", "another", "more", "mixed"},
 		entry.Messages[0].ReservedNames,
 	)
+}
+
+func TestParseRequiredAndOptionalFields(t *testing.T) {
+	r := strings.NewReader(protoWithRequiredAndOptionalFields)
+
+	entry, err := Parse("test:protoWithRequiredAndOptionalFields", r)
+	assert.NoError(t, err)
+
+	assert.True(t, entry.Messages[0].Fields[0].IsRequired)
+	assert.True(t, entry.Messages[0].Fields[1].IsOptional)
 }
 
 func TestParseIncludingImports(t *testing.T) {
