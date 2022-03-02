@@ -160,6 +160,31 @@ syntax = "proto3";
 package test;
 `
 
+const protoWithEnumOptions = `
+syntax = "proto3";
+
+package test;
+
+enum TestEnumOption {
+  reserved 2;
+  option (allow_alias) = true;
+  option (custom_enum_option) = 123;
+  FIRST = 0;
+  SECOND = 1;
+  SEGUNDO = 1 [(my_enum_value_option) = 321];
+}
+
+message TestNestedEnumOption {
+	option (message_option) = 123;
+	enum NestedEnum {
+		option (enum_option) = 456;
+		FIRST = 0;
+		SECOND = 1;
+		THIRD = 2;
+	}
+}
+`
+
 var gpfPath = filepath.Join("testdata", "getProtoFiles")
 
 func TestParseSingleQuoteReservedNames(t *testing.T) {
@@ -300,6 +325,23 @@ func TestParseIncludingEnumFieldOptions(t *testing.T) {
 	assert.Len(t, entry.Enums[0].EnumFields[2].Options, 1)
 	assert.Equal(t, "(my_enum_value_option)", entry.Enums[0].EnumFields[2].Options[0].Name)
 	assert.Equal(t, "321", entry.Enums[0].EnumFields[2].Options[0].Value)
+}
+
+func TestParseIncludingEnumOptions(t *testing.T) {
+	r := strings.NewReader(protoWithEnumOptions)
+	entry, err := Parse("test:protoWithEnumOptions", r)
+	assert.NoError(t, err)
+	assert.Len(t, entry.Enums, 2)
+	assert.Equal(t, entry.Enums[0].Name, "TestEnumOption")
+	assert.Len(t, entry.Enums[0].Options, 2)
+	assert.Equal(t, entry.Enums[0].Options[0].Name, "(allow_alias)")
+	assert.Equal(t, entry.Enums[0].Options[0].Value, "true")
+	assert.Equal(t, entry.Enums[0].Options[1].Name, "(custom_enum_option)")
+	assert.Equal(t, entry.Enums[0].Options[1].Value, "123")
+	assert.Equal(t, entry.Enums[1].Name, "TestNestedEnumOption.NestedEnum")
+	assert.Len(t, entry.Enums[1].Options, 1)
+	assert.Equal(t, entry.Enums[1].Options[0].Name, "(enum_option)")
+	assert.Equal(t, entry.Enums[1].Options[0].Value, "456")
 }
 
 func TestParseIncludingRpcOptions(t *testing.T) {
