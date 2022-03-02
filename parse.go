@@ -71,6 +71,7 @@ type Enum struct {
 	ReservedIDs   []int       `json:"reserved_ids,omitempty"`
 	ReservedNames []string    `json:"reserved_names,omitempty"`
 	AllowAlias    bool        `json:"allow_alias,omitempty"`
+	Options       []Option    `json:"options,omitempty"`
 }
 
 type Map struct {
@@ -204,6 +205,13 @@ func parseEnum(e *proto.Enum) Enum {
 				}
 			}
 			enum.EnumFields = append(enum.EnumFields, field)
+		}
+
+		if o, ok := v.(*proto.Option); ok {
+			enum.Options = append(enum.Options, Option{
+				Name:  o.Name,
+				Value: o.Constant.Source,
+			})
 		}
 
 		if r, ok := v.(*proto.Reserved); ok {
