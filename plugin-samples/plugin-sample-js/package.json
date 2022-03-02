@@ -16,11 +16,5 @@
   "bugs": {
     "url": "https://github.com/nilslice/protolock/issues"
   },
-  "homepage": "https://github.com/nilslice/protolock#readme",
-  "bin": {
-    "plugin-sample-js": "./main.js"
-  },
-  "devDependencies": {
-    "pkg": "^4.3.4"
-  }
+  "homepage": "https://github.com/nilslice/protolock#readme"
 }
