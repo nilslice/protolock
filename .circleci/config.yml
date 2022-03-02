@@ -106,15 +106,12 @@ jobs:
 
     steps: 
       - checkout
-      # fetch depenencies, test code
-      - run: npm i --prefix plugin-samples/plugin-sample-js/
-      - run: npm run pack --prefix plugin-samples/plugin-sample-js/
       - run: 
           name: 
           command: |
             set +o pipefail
             cd plugin-samples/plugin-sample-js/
-            WARNINGS=$(cat example.data.json | ./plugin-sample-js)
+            WARNINGS=$(node main.js < example.data.json)
             echo $WARNINGS | grep '{"filepath":"path/to/file.proto","message":"Something bad happened."}'
             echo $WARNINGS | grep '{"filepath":"path/to/another.proto","message":"Something else bad happened."}'
 
