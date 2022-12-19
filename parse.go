@@ -21,8 +21,8 @@ type Protolock struct {
 }
 
 type Definition struct {
-	Filepath Protopath `json:"protopath,omitempty"`
-	Def      Entry     `json:"def,omitempty"`
+	Filepath *Protopath `json:"protopath,omitempty"`
+	Def      Entry      `json:"def,omitempty"`
 }
 
 type Entry struct {
@@ -49,14 +49,14 @@ type Option struct {
 }
 
 type Message struct {
-	Name          string    `json:"name,omitempty"`
-	Fields        []Field   `json:"fields,omitempty"`
-	Maps          []Map     `json:"maps,omitempty"`
-	ReservedIDs   []int     `json:"reserved_ids,omitempty"`
-	ReservedNames []string  `json:"reserved_names,omitempty"`
-	Filepath      Protopath `json:"filepath,omitempty"`
-	Messages      []Message `json:"messages,omitempty"`
-	Options       []Option  `json:"options,omitempty"`
+	Name          string     `json:"name,omitempty"`
+	Fields        []Field    `json:"fields,omitempty"`
+	Maps          []Map      `json:"maps,omitempty"`
+	ReservedIDs   []int      `json:"reserved_ids,omitempty"`
+	ReservedNames []string   `json:"reserved_names,omitempty"`
+	Filepath      *Protopath `json:"filepath,omitempty"`
+	Messages      []Message  `json:"messages,omitempty"`
+	Options       []Option   `json:"options,omitempty"`
 }
 
 type EnumField struct {
@@ -90,9 +90,9 @@ type Field struct {
 }
 
 type Service struct {
-	Name     string    `json:"name,omitempty"`
-	RPCs     []RPC     `json:"rpcs,omitempty"`
-	Filepath Protopath `json:"filepath,omitempty"`
+	Name     string     `json:"name,omitempty"`
+	RPCs     []RPC      `json:"rpcs,omitempty"`
+	Filepath *Protopath `json:"filepath,omitempty"`
 }
 
 type RPC struct {
@@ -111,13 +111,13 @@ type Report struct {
 }
 
 type Warning struct {
-	Filepath Protopath `json:"filepath,omitempty"`
-	Message  string    `json:"message,omitempty"`
-	RuleName string    `json:"rulename,omitempty"`
+	Filepath *Protopath `json:"filepath,omitempty"`
+	Message  string     `json:"message,omitempty"`
+	RuleName string     `json:"rulename,omitempty"`
 }
 
 type ProtoFile struct {
-	ProtoPath Protopath
+	ProtoPath *Protopath
 	Entry     Entry
 }
 
@@ -512,10 +512,10 @@ func Compare(current, update Protolock) (*Report, error) {
 }
 
 // getProtoFiles finds recursively all .proto files to be processed.
-func getProtoFiles(root string, ignores string) ([]string, error) {
+func getProtoFiles(root string, ignores string, includes []string) ([]string, error) {
 	protoFiles := []string{}
 
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	protoWalker := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -547,9 +547,20 @@ func getProtoFiles(root string, ignores string) ([]string, error) {
 		protoFiles = append(protoFiles, path)
 
 		return nil
-	})
+	}
+
+	err := filepath.Walk(root, protoWalker)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(includes) > 0 {
+		for _, i := range includes {
+			err := filepath.Walk(i, protoWalker)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return protoFiles, nil
@@ -566,7 +577,7 @@ func getUpdatedLock(cfg Config) (*Protolock, error) {
 		return nil, err
 	}
 
-	protoFiles, err := getProtoFiles(root, cfg.Ignore)
+	protoFiles, err := getProtoFiles(root, cfg.Ignore, cfg.Includes)
 	if err != nil {
 		return nil, err
 	}
@@ -593,9 +604,27 @@ func getUpdatedLock(cfg Config) (*Protolock, error) {
 		}
 
 		localPath := strings.TrimPrefix(path, root)
+		isProtoRootFile := localPath != path
 		localPath = strings.TrimPrefix(localPath, string(filepath.Separator))
+
+		var pathType string
+		if isProtoRootFile {
+			pathType = "protodir"
+		} else {
+			includesPos := 0
+			for pos, include := range cfg.Includes {
+				if strings.HasPrefix(localPath, include) {
+					includesPos = pos
+					break
+				}
+			}
+			pathType = fmt.Sprintf("includes%d", includesPos)
+			localPath = strings.TrimPrefix(path, cfg.Includes[includesPos])
+			localPath = strings.TrimPrefix(localPath, string(filepath.Separator))
+		}
+
 		protoFile := ProtoFile{
-			ProtoPath: ProtoPath(Protopath(localPath)),
+			ProtoPath: &Protopath{localPath, pathType},
 			Entry:     entry,
 		}
 		files = append(files, protoFile)

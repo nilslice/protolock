@@ -73,6 +73,7 @@ Options:
 	--lockdir [.]		directory of proto.lock file
 	--protoroot [.]		root of directory tree containing proto files
 	--uptodate [false]	enforce that proto.lock file is up-to-date with proto files
+	--includes 		comma-separated list of additional filepaths to include
 ```
 
 ## Related Projects & Users
