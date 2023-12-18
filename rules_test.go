@@ -908,6 +908,26 @@ message B {
 }
 `
 
+const shouldFlagFieldMovedToFromOneofProto = `syntax = "proto3";
+package test;
+
+message Channel {
+  oneof test_oneof {
+  	int64 id = 1;
+  }
+  string name = 2;
+  string description = 3;
+}
+
+message NextRequest {}
+message PreviousRequest {}
+
+service ChannelChanger {
+	rpc Next(stream NextRequest) returns (Channel);
+	rpc Previous(PreviousRequest) returns (stream Channel);
+}
+`
+
 func TestParseOnReader(t *testing.T) {
 	r := strings.NewReader(simpleProto)
 	_, err := Parse("simpleProto", r)
@@ -1097,6 +1117,26 @@ func TestShouldConflictReusingFieldsNestedMessages(t *testing.T) {
 	warnings, ok := NoUsingReservedFields(curLock, updLock)
 	assert.False(t, ok)
 	assert.Len(t, warnings, 1)
+}
+
+func TestMovingFieldIntoOrOutOfOneof(t *testing.T) {
+	SetDebug(true)
+	curLock := parseTestProto(t, simpleProto)
+	updLock := parseTestProto(t, shouldFlagFieldMovedToFromOneofProto)
+
+	warnings, ok := NoMovingExistingFieldsIntoOrOutOfOneof(curLock, updLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 1)
+	assert.Equal(t, "\"id\" was moved into oneof \"test_oneof\"", warnings[0].Message)
+
+	warnings, ok = NoMovingExistingFieldsIntoOrOutOfOneof(updLock, updLock)
+	assert.True(t, ok)
+	assert.Len(t, warnings, 0)
+
+	warnings, ok = NoMovingExistingFieldsIntoOrOutOfOneof(updLock, curLock)
+	assert.False(t, ok)
+	assert.Len(t, warnings, 1)
+	assert.Equal(t, "\"id\" was moved out of oneof \"test_oneof\"", warnings[0].Message)
 }
 
 func parseTestProto(t *testing.T, proto string) Protolock {

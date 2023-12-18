@@ -827,6 +827,62 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 	return nil, true
 }
 
+// Existing fields must not be moved into or out of a oneof. This is a backwards-incompatible change in the Go protobuf stubs.
+// per https://google.aip.dev/180#moving-into-oneofs
+func NoMovingExistingFieldsIntoOrOutOfOneof(cur, upd Protolock) ([]Warning, bool) {
+	var warnings []Warning
+
+	// check all message fields
+	curFieldMap := getFieldMap(cur)
+	updFieldMap := getFieldMap(upd)
+
+	// if a field name from the current Protolock has a OneofParent entry
+	// that differs from the updated Protolock, then a warning should be added
+	for path, msgMap := range curFieldMap {
+		for msgName, fieldMap := range msgMap {
+			for fieldName, field := range fieldMap {
+				updField, ok := updFieldMap[path][msgName][fieldName]
+				if ok && updField.OneofParent != field.OneofParent {
+					if len(updField.OneofParent) == 0 {
+						msg := fmt.Sprintf(
+							`"%s" was moved out of oneof "%s"`,
+							fieldName, field.OneofParent,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: OSPath(path),
+							Message:  msg,
+						})
+					} else if len(field.OneofParent) == 0 {
+						msg := fmt.Sprintf(
+							`"%s" was moved into oneof "%s"`,
+							fieldName, updField.OneofParent,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: OSPath(path),
+							Message:  msg,
+						})
+					} else {
+						msg := fmt.Sprintf(
+							`"%s" was moved from oneof "%s" into of oneof "%s"`,
+							fieldName, field.OneofParent, updField.OneofParent,
+						)
+						warnings = append(warnings, Warning{
+							Filepath: OSPath(path),
+							Message:  msg,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	if warnings != nil {
+		return warnings, false
+	}
+
+	return nil, true
+}
+
 func getReservedFieldsRecursive(reservedIDMap lockIDsMap, reservedNameMap lockNamesMap, filepath Protopath, prefix string, msg Message) {
 	msgName := prefix + msg.Name
 	for _, id := range msg.ReservedIDs {
@@ -916,7 +972,7 @@ func getFieldIDNameRecursive(fieldIDNameMap lockFieldIDNameMap, filepath Protopa
 		fieldIDNameMap[filepath][msgName][mp.Field.ID] = mp.Field.Name
 	}
 	for _, nestedMsg := range msg.Messages {
-		getFieldIDNameRecursive(fieldIDNameMap, filepath, msgName + nestedPrefix, nestedMsg)
+		getFieldIDNameRecursive(fieldIDNameMap, filepath, msgName+nestedPrefix, nestedMsg)
 	}
 }
 
@@ -1027,7 +1083,7 @@ func getMapMapRecursive(nameTypeMap lockMapMap, filepath Protopath, prefix strin
 	}
 	for _, nestedMsg := range msg.Messages {
 
-		getMapMapRecursive(nameTypeMap, filepath, msgName + nestedPrefix, nestedMsg)
+		getMapMapRecursive(nameTypeMap, filepath, msgName+nestedPrefix, nestedMsg)
 	}
 }
 
@@ -1063,7 +1119,7 @@ func getFieldMapRecursive(nameTypeMap lockFieldMap, filepath Protopath, prefix s
 		nameTypeMap[filepath][msgName][mp.Field.Name] = mp.Field
 	}
 	for _, nestedMsg := range msg.Messages {
-		getFieldMapRecursive(nameTypeMap, filepath, msgName + nestedPrefix, nestedMsg)
+		getFieldMapRecursive(nameTypeMap, filepath, msgName+nestedPrefix, nestedMsg)
 	}
 }
 

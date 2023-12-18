@@ -196,6 +196,22 @@ message TestNestedEnumOption {
 }
 `
 
+const protoWithOneof = `
+syntax = "proto3";
+
+import "testdata/test.proto";
+
+package test;
+
+message Channel {
+  oneof test_oneof {
+  	int64 id = 1;
+  }
+  string name = 2;
+  string description = 3;
+}
+`
+
 var gpfPath = filepath.Join("testdata", "getProtoFiles")
 
 func TestParseSingleQuoteReservedNames(t *testing.T) {
@@ -413,6 +429,19 @@ func TestParseWithoutEntryOptionsWithRPCOptions(t *testing.T) {
 
 	assert.Len(t, entry.Options, 0)
 	assert.Len(t, entry.Services[0].RPCs[0].Options, 2)
+}
+
+func TestParseWithOneof(t *testing.T) {
+	r := strings.NewReader(protoWithOneof)
+
+	entry, err := Parse("test:protoWithOneof", r)
+	assert.NoError(t, err)
+
+	assert.Len(t, entry.Messages, 1)
+	assert.Len(t, entry.Messages[0].Fields, 3)
+	assert.Equal(t, "test_oneof", entry.Messages[0].Fields[0].OneofParent)
+	assert.Equal(t, "", entry.Messages[0].Fields[1].OneofParent)
+	assert.Equal(t, "", entry.Messages[0].Fields[2].OneofParent)
 }
 
 func TestGetProtoFilesFiltersDirectories(t *testing.T) {
