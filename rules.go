@@ -41,6 +41,10 @@ var (
 			Name: "NoChangingRPCSignature",
 			Func: NoChangingRPCSignature,
 		},
+		{
+			Name: "NoMovingExistingFieldsIntoOrOutOfOneof",
+			Func: NoMovingExistingFieldsIntoOrOutOfOneof,
+		},
 	}
 
 	strict = true
