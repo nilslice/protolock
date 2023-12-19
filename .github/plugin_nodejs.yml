@@ -1,0 +1,35 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}
+      GOBIN: ${{ github.workspace }}/bin
+      GO111MODULE: "on"
+    defaults:
+      run:
+        working-directory: ${{ env.GOPATH }}/src/github.com/nilslice/protolock
+    name: plugin_nodejs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          path: ${{ env.GOPATH }}/src/github.com/nilslice/protolock
+      - name: Set Up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 8
+      - run:
+          name:
+          command: |
+            set +o pipefail
+            cd plugin-samples/plugin-sample-js/
+            WARNINGS=$(node main.js < example.data.json)
+            echo $WARNINGS | grep '{"filepath":"path/to/file.proto","message":"Something bad happened."}'
+            echo $WARNINGS | grep '{"filepath":"path/to/another.proto","message":"Something else bad happened."}'
