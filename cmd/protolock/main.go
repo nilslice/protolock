@@ -9,7 +9,7 @@ import (
 	"github.com/nilslice/protolock"
 )
 
-const info = `Track your .proto files and prevent changes to messages and services which impact API compatibilty.
+const info = `Track your .proto files and prevent changes to messages and services which impact API compatibility.
 
 Copyright Steve Manuel <nilslice@gmail.com>
 Released under the BSD-3-Clause license.
