@@ -80,13 +80,14 @@ type Map struct {
 }
 
 type Field struct {
-	ID         int      `json:"id,omitempty"`
-	Name       string   `json:"name,omitempty"`
-	Type       string   `json:"type,omitempty"`
-	IsRepeated bool     `json:"is_repeated,omitempty"`
-	IsOptional bool     `json:"optional,omitempty"`
-	IsRequired bool     `json:"required,omitempty"`
-	Options    []Option `json:"options,omitempty"`
+	ID          int      `json:"id,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Type        string   `json:"type,omitempty"`
+	IsRepeated  bool     `json:"is_repeated,omitempty"`
+	IsOptional  bool     `json:"optional,omitempty"`
+	IsRequired  bool     `json:"required,omitempty"`
+	Options     []Option `json:"options,omitempty"`
+	OneofParent string   `json:"oneof_parent,omitempty"`
 }
 
 type Service struct {
@@ -326,11 +327,12 @@ func parseMessage(m *proto.Message) Message {
 			for _, el := range oo.Elements {
 				if f, ok := el.(*proto.OneOfField); ok {
 					fields = append(fields, Field{
-						ID:         f.Sequence,
-						Name:       f.Name,
-						Type:       f.Type,
-						IsRepeated: false,
-						Options:    parseOptions(f.Options),
+						ID:          f.Sequence,
+						Name:        f.Name,
+						Type:        f.Type,
+						IsRepeated:  false,
+						Options:     parseOptions(f.Options),
+						OneofParent: oo.Name,
 					})
 				}
 			}

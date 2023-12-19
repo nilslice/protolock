@@ -51,7 +51,7 @@ var (
 func main() {
 	// exit if no command (i.e. help, -h, --help, init, status, or commit)
 	if len(os.Args) < 2 {
-		fmt.Println(info + usage)
+		fmt.Print(info + usage)
 		os.Exit(0)
 	}
 
@@ -75,7 +75,7 @@ func main() {
 	// switch through known commands
 	switch os.Args[1] {
 	case "-h", "--help", "help":
-		fmt.Println(usage)
+		fmt.Print(usage)
 
 	case "init":
 		r, err := protolock.Init(*cfg)

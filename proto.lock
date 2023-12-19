@@ -503,12 +503,14 @@
               {
                 "id": 4,
                 "name": "name",
-                "type": "string"
+                "type": "string",
+                "oneof_parent": "test_oneof"
               },
               {
                 "id": 9,
                 "name": "is_active",
-                "type": "bool"
+                "type": "bool",
+                "oneof_parent": "test_oneof"
               }
             ]
           },
