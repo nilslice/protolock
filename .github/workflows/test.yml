@@ -1,0 +1,108 @@
+name: Protolock source & CLI test
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}
+      GOBIN: ${{ github.workspace }}/bin
+      GO111MODULE: "on"
+    defaults:
+      run:
+        working-directory: ${{ env.GOPATH }}/src/github.com/nilslice/protolock
+    name: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          path: ${{ env.GOPATH }}/src/github.com/nilslice/protolock
+      - name: Set Up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.12'
+      - name: fetch depenencies, test code
+        run: |
+          go get -v -d ./...
+          go test -v -race ./...
+      - name:  install binary, test commands
+        run: |
+          go install ./...
+          protolock
+          stat proto.lock
+          cat proto.lock | grep "testdata:/:test.proto"
+          protolock status
+          protolock commit
+          protolock status --plugins=_not-a-plugin_ | grep "executable file not found"
+      - name: check output using plugin-sample-error
+        run: |
+          set +o pipefail
+
+          protolock status --plugins=plugin-sample-error | grep "some error"
+      - name: check output using plugin-sample
+        run: |
+          set +o pipefail
+
+          WARNINGS=$(protolock status --plugins=plugin-sample | wc -l)
+          if [ "$WARNINGS" != 2 ]; then
+            exit 1
+          fi
+      - name: check output using multiple plugins, with one error expected
+        run: |
+          set +o pipefail
+
+          protolock status --plugins=plugin-sample,plugin-sample-error | grep "some error"
+          protolock status --plugins=plugin-sample-error,plugin-sample | grep "some error"
+      - name: check output using multiple plugins with errors
+        run: |
+          set +o pipefail
+
+          ERRS=$(protolock status --plugins=plugin-sample-error,plugin-sample-error | grep "some error" | wc -l)
+          if [ "$ERRS" != 4 ]; then # (4 = 2 * 2, since errors are now reported using 2 lines)
+            exit 1
+          fi
+          MOREERRS=$(protolock status --plugins=plugin-sample-error,plugin-sample-error,plugin-sample-error | grep "some error" | wc -l)
+          if [ "$MOREERRS" != 6 ]; then # (6 = 3 * 2, since errors are now reported using 2 lines)
+            exit 1
+          fi
+      - name: remove a test proto file, expect violations.txt to contain data from plugin-sample
+        run: |
+          set +o pipefail
+
+          rm testdata/test.proto
+          protolock status --plugins=plugin-sample || true # let this fail, don't stop CI
+          stat violations.txt
+          cat violations.txt | grep "Encountered changes in violation of: NoRemovingFieldsWithoutReserve"
+      - name: check if proto.lock is up-to-date with the .proto files in the tree
+        run: |
+          set +o pipefail
+
+          cat >testdata/newProto.proto <<EOL
+          syntax = "proto3";
+          package testdata;
+          message newProto {}
+          EOL
+
+          # checkout to HEAD to revert the changes made by previous tests
+          git reset --hard HEAD
+
+          # basic status check should not fail even though the lock file is 
+          # now technically out of date, compared to the protos
+          protolock status     
+
+          NOCHECK=$(protolock status --uptodate=false | wc -l) # false=default 
+          if [ "$NOCHECK" != 0 ]; then 
+            exit 1
+          fi
+
+          CHECK=$(protolock status --uptodate=true | wc -l)
+          if [ "$CHECK" = 0 ]; then 
+            exit 1
+          fi
+      - name: check that proto.lock records aggregate options with array values
+        run: |
+          set +o pipefail
+
+          rm proto.lock && protolock init
+          cat proto.lock | grep "4.56"
+          cat proto.lock | grep "7.89"
