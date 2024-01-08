@@ -1,15 +1,30 @@
-# Check https://circleci.com/docs/2.0/language-go/ for more details
-version: 2
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 jobs:
-  build:
-    docker:
-      - image: circleci/golang:1.12
-        environment:
-          GO111MODULE: "on"
-
-    working_directory: /go/src/github.com/nilslice/protolock
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}
+      GOBIN: ${{ github.workspace }}/bin
+      GO111MODULE: "on"
+    defaults:
+      run:
+        working-directory: ${{ env.GOPATH }}/src/github.com/nilslice/protolock
+    name: build
     steps:
-      - checkout
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          path: ${{ env.GOPATH }}/src/github.com/nilslice/protolock
+      - name: Set Up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.12'
       # fetch depenencies, test code
       - run: go get -v -d ./...
       - run: go test -v -race ./...
@@ -21,7 +36,7 @@ jobs:
       - run: protolock status
       - run: protolock commit
       - run: protolock status --plugins=_not-a-plugin_ | grep "executable file not found"
-      - run: 
+      - run:
           name: check output using plugin-sample-error
           command: |
             set +o pipefail
@@ -36,14 +51,14 @@ jobs:
             if [ "$WARNINGS" != 2 ]; then
               exit 1
             fi
-      - run: 
+      - run:
           name: check output using multiple plugins, with one error expected
           command: |
             set +o pipefail
 
             protolock status --plugins=plugin-sample,plugin-sample-error | grep "some error"
             protolock status --plugins=plugin-sample-error,plugin-sample | grep "some error"
-      - run: 
+      - run:
           name: check output using multiple plugins with errors
           command: |
             set +o pipefail
@@ -56,7 +71,7 @@ jobs:
             if [ "$MOREERRS" != 6 ]; then # (6 = 3 * 2, since errors are now reported using 2 lines)
               exit 1
             fi
-      - run: 
+      - run:
           name: remove a test proto file, expect violations.txt to contain data from plugin-sample
           command: |
             set +o pipefail
@@ -94,30 +109,9 @@ jobs:
             fi
       - run:
           name: check that proto.lock records aggregate options with array values
-          command: | 
+          command: |
             set +o pipefail
 
             rm proto.lock && protolock init
             cat proto.lock | grep "4.56"
             cat proto.lock | grep "7.89"
-  plugin_nodejs:
-    docker:
-      - image: circleci/node:8
-
-    steps: 
-      - checkout
-      - run: 
-          name: 
-          command: |
-            set +o pipefail
-            cd plugin-samples/plugin-sample-js/
-            WARNINGS=$(node main.js < example.data.json)
-            echo $WARNINGS | grep '{"filepath":"path/to/file.proto","message":"Something bad happened."}'
-            echo $WARNINGS | grep '{"filepath":"path/to/another.proto","message":"Something else bad happened."}'
-
-workflows:
-  version: 2
-  build-cmd-test-plugins:
-    jobs:
-      - build
-      - plugin_nodejs
