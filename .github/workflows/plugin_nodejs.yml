@@ -1,10 +1,6 @@
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+name: Node JS Plugin Test
+on: [push, pull_request]
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -25,11 +21,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 8
-      - run:
-          name:
-          command: |
-            set +o pipefail
-            cd plugin-samples/plugin-sample-js/
-            WARNINGS=$(node main.js < example.data.json)
-            echo $WARNINGS | grep '{"filepath":"path/to/file.proto","message":"Something bad happened."}'
-            echo $WARNINGS | grep '{"filepath":"path/to/another.proto","message":"Something else bad happened."}'
+      - name: "Run test"
+        run: |
+          set +o pipefail
+          cd plugin-samples/plugin-sample-js/
+          WARNINGS=$(node main.js < example.data.json)
+          echo $WARNINGS | grep '{"filepath":"path/to/file.proto","message":"Something bad happened."}'
+          echo $WARNINGS | grep '{"filepath":"path/to/another.proto","message":"Something else bad happened."}'
