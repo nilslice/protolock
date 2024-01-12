@@ -47,12 +47,20 @@ jobs:
           if [ "$WARNINGS" != 2 ]; then
             exit 1
           fi
+      - name: check output using plugin-sample-wasm
+        run: |
+          set +o pipefail
+
+          protolock status --plugins=plugin-samples/plugin-sample-wasm/status.wasm | grep "Extism plugin ran"
       - name: check output using multiple plugins, with one error expected
         run: |
           set +o pipefail
 
-          protolock status --plugins=plugin-sample,plugin-sample-error | grep "some error"
+          WASM=plugin-samples/plugin-sample-wasm/status.wasm
+
+          protolock status --plugins=plugin-sample,plugin-sample-error,$WASM | grep "some error"
           protolock status --plugins=plugin-sample-error,plugin-sample | grep "some error"
+          protolock status --plugins=plugin-sample,plugin-sample-error,$WASM | grep "Extism plugin ran"
       - name: check output using multiple plugins with errors
         run: |
           set +o pipefail

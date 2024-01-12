@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	extism "github.com/extism/go-sdk"
 	"github.com/nilslice/protolock"
 	"github.com/nilslice/protolock/extend"
 )
@@ -68,28 +70,61 @@ func runPlugins(
 		// and updated Protolock structs from the `protolock status` call
 		go func(name string) {
 			defer wg.Done()
+			// output is populated either by the execution of an Extism plugin or a native binary
+			var output []byte
 			name = strings.TrimSpace(name)
-			path, err := exec.LookPath(name)
-			if err != nil {
-				if path == "" {
-					path = name
+			path := name
+
+			if debug {
+				fmt.Println(logPrefix, name, "running plugin")
+			}
+
+			if strings.HasSuffix(name, ".wasm") {
+				// do extism call
+				manifest := extism.Manifest{
+					Wasm: []extism.Wasm{extism.WasmFile{Path: name}},
+					// TODO: consider enabling external configuration to add hosts and paths
+					// AllowedHosts: []string{},
+					// AllowedPaths: map[string]string{},
 				}
-				fmt.Println(logPrefix, name, "plugin exec error:", err)
-				return
-			}
 
-			// initialize the executable to be called from protolock using the
-			// absolute path and copy of the input data
-			plugin := &exec.Cmd{
-				Path:  path,
-				Stdin: pluginInputData,
-			}
+				plugin, err := extism.NewPlugin(context.Background(), manifest, extism.PluginConfig{EnableWasi: true}, nil)
+				if err != nil {
+					fmt.Println(logPrefix, name, "failed to create extism plugin:", err)
+					return
+				}
 
-			// execute the plugin and capture the output
-			output, err := plugin.CombinedOutput()
-			if err != nil {
-				pluginErrsChan <- wrapPluginErr(name, path, err, output)
-				return
+				var exitCode uint32
+				exitCode, output, err = plugin.Call("status", inputData.Bytes())
+				if err != nil {
+					fmt.Println(logPrefix, name, "plugin exec error: ", err, "code:", exitCode)
+					pluginErrsChan <- wrapPluginErr(name, path, err, output)
+					return
+				}
+
+			} else {
+				path, err = exec.LookPath(name)
+				if err != nil {
+					if path == "" {
+						path = name
+					}
+					fmt.Println(logPrefix, name, "plugin exec error:", err)
+					return
+				}
+
+				// initialize the executable to be called from protolock using the
+				// absolute path and copy of the input data
+				plugin := &exec.Cmd{
+					Path:  path,
+					Stdin: pluginInputData,
+				}
+
+				// execute the plugin and capture the output
+				output, err = plugin.CombinedOutput()
+				if err != nil {
+					pluginErrsChan <- wrapPluginErr(name, path, err, output)
+					return
+				}
 			}
 
 			pluginData := &extend.Data{}
