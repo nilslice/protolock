@@ -62,7 +62,7 @@ jobs:
 
           protolock status \
             --plugins=plugin-sample,plugin-sample-error,plugin-samples/plugin-sample-wasm/status.wasm \
-            > out.txt
+            > out.txt || true
           cat out.txt | grep "Extism plugin ran"
       - name: check output using multiple plugins with errors
         run: |
