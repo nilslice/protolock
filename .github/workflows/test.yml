@@ -60,7 +60,7 @@ jobs:
 
           protolock status --plugins=plugin-sample-error,plugin-sample | grep "some error"
 
-          protolock status \
+          go run ./cmd/... status \
             --plugins=plugin-sample,plugin-sample-error,plugin-samples/plugin-sample-wasm/status.wasm \
             | grep "Extism plugin ran"
       - name: check output using multiple plugins with errors
