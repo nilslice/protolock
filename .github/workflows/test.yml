@@ -54,8 +54,6 @@ jobs:
           protolock status --plugins=plugin-samples/plugin-sample-wasm/status.wasm | grep "Extism plugin ran"
       - name: check output using multiple plugins, with one error expected
         run: |
-          set +o pipefail
-
           protolock status \
             --plugins=plugin-sample,plugin-sample-error,plugin-samples/plugin-sample-wasm/status.wasm \
             | grep "some error"
