@@ -1,6 +1,6 @@
 module github.com/nilslice/protolock
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/emicklei/proto v1.9.1
