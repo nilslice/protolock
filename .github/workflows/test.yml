@@ -56,9 +56,13 @@ jobs:
         run: |
           set +o pipefail
 
-          TEST=$(protolock status --plugins=plugin-sample,plugin-sample-error,plugin-samples/plugin-sample-wasm/status.wasm)
-          echo $TEST | grep "some error"
-          echo $TEST | grep "Extism plugin ran"
+          protolock status \
+            --plugins=plugin-sample,plugin-sample-error,plugin-samples/plugin-sample-wasm/status.wasm \
+            | grep "some error"
+
+          protolock status \
+            --plugins=plugin-sample,plugin-sample-error,plugin-samples/plugin-sample-wasm/status.wasm \
+            | grep "Extism plugin ran"
         
           protolock status --plugins=plugin-sample-error,plugin-sample | grep "some error"
           protolock status \
