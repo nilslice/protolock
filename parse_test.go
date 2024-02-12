@@ -212,6 +212,14 @@ message Channel {
 }
 `
 
+const protoWithCStyleInlineComments = `
+syntax = "proto3";
+	
+message Example {
+  optional /* i'm a comment */ bool field = 1;
+}		
+`
+
 var gpfPath = filepath.Join("testdata", "getProtoFiles")
 
 func TestParseSingleQuoteReservedNames(t *testing.T) {
@@ -502,4 +510,25 @@ func TestGetProtoFilesIgnoresMultiple(t *testing.T) {
 
 	path = filepath.Join(gpfPath, "include", "include.proto")
 	assert.Contains(t, files, path)
+}
+
+func TestCStyleInlineComments(t *testing.T) {
+	r := strings.NewReader(protoWithCStyleInlineComments)
+
+	entry, err := Parse("test:protoWithCStyleInlineComments", r)
+	assert.NoError(t, err)
+	assert.Len(t, entry.Messages, 1)
+
+	example := entry.Messages[0]
+	assert.Len(t, example.Fields, 1)
+	assert.Equal(t, example.Name, "Example")
+
+	// message Example {
+	//   optional /* i'm a comment */ bool field = 1;
+	// }
+
+	field := example.Fields[0]
+	assert.Equal(t, field.Name, "field")
+	assert.Equal(t, field.Type, "bool")
+	assert.True(t, field.IsOptional)
 }
