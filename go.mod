@@ -3,7 +3,7 @@ module github.com/nilslice/protolock
 go 1.21
 
 require (
-	github.com/emicklei/proto v1.9.1
+	github.com/emicklei/proto v1.13.2
 	github.com/extism/go-sdk v1.0.0
 	github.com/stretchr/testify v1.8.4
 )
