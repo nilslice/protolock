@@ -34,6 +34,7 @@ Options:
 	--lockdir [.]		directory of proto.lock file
 	--protoroot [.]		root of directory tree containing proto files
 	--uptodate [false]	enforce that proto.lock file is up-to-date with proto files
+	--includes 		comma-separated list of additional filepaths to include
 `
 
 var (
@@ -46,6 +47,7 @@ var (
 	lockDir   = options.String("lockdir", ".", "directory of proto.lock file")
 	protoRoot = options.String("protoroot", ".", "root of directory tree containing proto files")
 	upToDate  = options.Bool("uptodate", false, "enforce that proto.lock file is up-to-date with proto files")
+	includes  = options.String("includes", "", "comma-separated list of additional filepaths to include")
 )
 
 func main() {
@@ -66,6 +68,7 @@ func main() {
 		*ignore,
 		*upToDate,
 		*debug,
+		*includes,
 	)
 	if err != nil {
 		fmt.Println(err)

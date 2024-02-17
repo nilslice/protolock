@@ -3,6 +3,7 @@ package protolock
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Config struct {
@@ -11,11 +12,12 @@ type Config struct {
 	Ignore    string
 	UpToDate  bool
 	Debug     bool
+	Includes  []string
 }
 
 func NewConfig(
 	lockDir, protoRoot, ignores string,
-	upToDate, debug bool,
+	upToDate, debug bool, includes string,
 ) (*Config, error) {
 	l, err := filepath.Abs(lockDir)
 	if err != nil {
@@ -26,11 +28,24 @@ func NewConfig(
 		return nil, err
 	}
 
+	var includesAbs []string
+	if len(includes) > 0 {
+		includesOrig := strings.Split(includes, ",")
+		for _, c := range includesOrig {
+			i, err := filepath.Abs(c)
+			if err != nil {
+				return nil, err
+			}
+			includesAbs = append(includesAbs, i)
+		}
+	}
+
 	return &Config{
 		LockDir:   l,
 		ProtoRoot: p,
 		Ignore:    ignores,
 		UpToDate:  upToDate,
+		Includes:  includesAbs,
 	}, nil
 }
 

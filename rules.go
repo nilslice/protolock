@@ -76,7 +76,7 @@ type RuleFunc func(current, updated Protolock) ([]Warning, bool)
 // table of filepath -> message name -> reserved field ID -> times ID encountered
 // i.e.
 /*
-	["test.proto"] 	-> ["Test"] -> [1] -> 1
+	[Protopath{"test.proto", "protodir"}] 	-> ["Test"] -> [1] -> 1
 
 			-> ["User"] -> [1] -> 1
 				       [2] -> 1
@@ -92,7 +92,7 @@ type lockIDsMap map[Protopath]map[string]map[int]int
 // table of filepath -> message name -> field name -> times name encountered (or the field ID)
 // i.e.
 /*
-	["test.proto"]	->	["Test"]	->	["field_one"]	->	1
+	[Protopath{"test.proto", "protodir"}]	->	["Test"]	->	["field_one"]	->	1
 			-> 	["User"] 	-> 	["field_one"] 	-> 	1
 							["field_two"] 	-> 	1
 							["field_three"] -> 	1
@@ -190,29 +190,29 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 	// add each messages field name/number to the existing list identified as
 	// reserved to analyze
 	for _, def := range upd.Definitions {
-		if reservedIDMap[def.Filepath] == nil {
-			reservedIDMap[def.Filepath] = make(map[string]map[int]int)
+		if reservedIDMap[*def.Filepath] == nil {
+			reservedIDMap[*def.Filepath] = make(map[string]map[int]int)
 		}
-		if reservedNameMap[def.Filepath] == nil {
-			reservedNameMap[def.Filepath] = make(map[string]map[string]int)
+		if reservedNameMap[*def.Filepath] == nil {
+			reservedNameMap[*def.Filepath] = make(map[string]map[string]int)
 		}
 		for _, msg := range def.Def.Messages {
 			incMessageFields(
 				reservedIDMap, reservedNameMap,
-				def.Filepath, "", msg,
+				*def.Filepath, "", msg,
 			)
 		}
 
-		if reservedEnumIDMap[def.Filepath] == nil {
-			reservedEnumIDMap[def.Filepath] = make(map[string]map[int]int)
+		if reservedEnumIDMap[*def.Filepath] == nil {
+			reservedEnumIDMap[*def.Filepath] = make(map[string]map[int]int)
 		}
-		if reservedEnumNameMap[def.Filepath] == nil {
-			reservedEnumNameMap[def.Filepath] = make(map[string]map[string]int)
+		if reservedEnumNameMap[*def.Filepath] == nil {
+			reservedEnumNameMap[*def.Filepath] = make(map[string]map[string]int)
 		}
 		for _, enum := range def.Def.Enums {
 			incEnumFields(
 				reservedEnumIDMap, reservedEnumNameMap,
-				def.Filepath, enum,
+				*def.Filepath, enum,
 			)
 		}
 	}
@@ -233,7 +233,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, id,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -252,7 +252,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, name,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -274,7 +274,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						enumName, id,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -293,7 +293,7 @@ func NoUsingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						enumName, name,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -332,7 +332,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, id,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -348,7 +348,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						msgName, name,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -368,7 +368,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						enumName, id,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -384,7 +384,7 @@ func NoRemovingReservedFields(cur, upd Protolock) ([]Warning, bool) {
 						enumName, name,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -421,7 +421,7 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updFieldID, fieldID,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -447,7 +447,7 @@ func NoChangingFieldIDs(cur, upd Protolock) ([]Warning, bool) {
 							enumName, fieldName, updFieldInteger, fieldInteger,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -484,7 +484,7 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updField.Type, field.Type,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -495,7 +495,7 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updField.IsRepeated, field.IsRepeated,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -517,7 +517,7 @@ func NoChangingFieldTypes(cur, upd Protolock) ([]Warning, bool) {
 							msgName, fieldName, updMap.KeyType, mp.KeyType,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -560,7 +560,7 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 							msgName, updFieldName, fieldID, fieldName,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -586,7 +586,7 @@ func NoChangingFieldNames(cur, upd Protolock) ([]Warning, bool) {
 							enumName, updFieldName, fieldInteger, fieldName,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -626,7 +626,7 @@ func NoRemovingRPCs(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -673,7 +673,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 							msgName, field.Name,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -690,7 +690,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 							msgName, field.ID,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -725,7 +725,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 							enumName, field.Name,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -742,7 +742,7 @@ func NoRemovingFieldsWithoutReserve(cur, upd Protolock) ([]Warning, bool) {
 							enumName, field.Integer,
 						)
 						warnings = append(warnings, Warning{
-							Filepath: OSPath(path),
+							Filepath: ProtopathPtr(OSPath(path)),
 							Message:  msg,
 						})
 					}
@@ -783,7 +783,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.InStreamed,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -794,7 +794,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.OutStreamed,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -805,7 +805,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.InType,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -816,7 +816,7 @@ func NoChangingRPCSignature(cur, upd Protolock) ([]Warning, bool) {
 						svcName, rpcName, rpc.OutType,
 					)
 					warnings = append(warnings, Warning{
-						Filepath: OSPath(path),
+						Filepath: ProtopathPtr(OSPath(path)),
 						Message:  msg,
 					})
 				}
@@ -915,15 +915,15 @@ func getReservedFields(lock Protolock) (lockIDsMap, lockNamesMap) {
 	reservedNameMap := make(lockNamesMap)
 
 	for _, def := range lock.Definitions {
-		if reservedIDMap[def.Filepath] == nil {
-			reservedIDMap[def.Filepath] = make(map[string]map[int]int)
+		if reservedIDMap[*def.Filepath] == nil {
+			reservedIDMap[*def.Filepath] = make(map[string]map[int]int)
 		}
-		if reservedNameMap[def.Filepath] == nil {
-			reservedNameMap[def.Filepath] = make(map[string]map[string]int)
+		if reservedNameMap[*def.Filepath] == nil {
+			reservedNameMap[*def.Filepath] = make(map[string]map[string]int)
 		}
 
 		for _, msg := range def.Def.Messages {
-			getReservedFieldsRecursive(reservedIDMap, reservedNameMap, def.Filepath, "", msg)
+			getReservedFieldsRecursive(reservedIDMap, reservedNameMap, *def.Filepath, "", msg)
 		}
 	}
 
@@ -935,25 +935,25 @@ func getReservedEnumFields(lock Protolock) (lockIDsMap, lockNamesMap) {
 	reservedNameMap := make(lockNamesMap)
 
 	for _, def := range lock.Definitions {
-		if reservedIDMap[def.Filepath] == nil {
-			reservedIDMap[def.Filepath] = make(map[string]map[int]int)
+		if reservedIDMap[*def.Filepath] == nil {
+			reservedIDMap[*def.Filepath] = make(map[string]map[int]int)
 		}
-		if reservedNameMap[def.Filepath] == nil {
-			reservedNameMap[def.Filepath] = make(map[string]map[string]int)
+		if reservedNameMap[*def.Filepath] == nil {
+			reservedNameMap[*def.Filepath] = make(map[string]map[string]int)
 		}
 
 		for _, enum := range def.Def.Enums {
 			for _, id := range enum.ReservedIDs {
-				if reservedIDMap[def.Filepath][enum.Name] == nil {
-					reservedIDMap[def.Filepath][enum.Name] = make(map[int]int)
+				if reservedIDMap[*def.Filepath][enum.Name] == nil {
+					reservedIDMap[*def.Filepath][enum.Name] = make(map[int]int)
 				}
-				reservedIDMap[def.Filepath][enum.Name][id]++
+				reservedIDMap[*def.Filepath][enum.Name][id]++
 			}
 			for _, name := range enum.ReservedNames {
-				if reservedNameMap[def.Filepath][enum.Name] == nil {
-					reservedNameMap[def.Filepath][enum.Name] = make(map[string]int)
+				if reservedNameMap[*def.Filepath][enum.Name] == nil {
+					reservedNameMap[*def.Filepath][enum.Name] = make(map[string]int)
 				}
-				reservedNameMap[def.Filepath][enum.Name][name]++
+				reservedNameMap[*def.Filepath][enum.Name][name]++
 			}
 		}
 	}
@@ -986,11 +986,11 @@ func getFieldsIDName(lock Protolock) lockFieldIDNameMap {
 	fieldIDNameMap := make(lockFieldIDNameMap)
 
 	for _, def := range lock.Definitions {
-		if fieldIDNameMap[def.Filepath] == nil {
-			fieldIDNameMap[def.Filepath] = make(map[string]map[int]string)
+		if fieldIDNameMap[*def.Filepath] == nil {
+			fieldIDNameMap[*def.Filepath] = make(map[string]map[int]string)
 		}
 		for _, msg := range def.Def.Messages {
-			getFieldIDNameRecursive(fieldIDNameMap, def.Filepath, "", msg)
+			getFieldIDNameRecursive(fieldIDNameMap, *def.Filepath, "", msg)
 		}
 	}
 
@@ -1003,15 +1003,15 @@ func getEnumFieldsIDName(lock Protolock) lockFieldIDNameMap {
 	fieldIDNameMap := make(lockFieldIDNameMap)
 
 	for _, def := range lock.Definitions {
-		if fieldIDNameMap[def.Filepath] == nil {
-			fieldIDNameMap[def.Filepath] = make(map[string]map[int]string)
+		if fieldIDNameMap[*def.Filepath] == nil {
+			fieldIDNameMap[*def.Filepath] = make(map[string]map[int]string)
 		}
 		for _, enum := range def.Def.Enums {
 			for _, field := range enum.EnumFields {
-				if fieldIDNameMap[def.Filepath][enum.Name] == nil {
-					fieldIDNameMap[def.Filepath][enum.Name] = make(map[int]string)
+				if fieldIDNameMap[*def.Filepath][enum.Name] == nil {
+					fieldIDNameMap[*def.Filepath][enum.Name] = make(map[int]string)
 				}
-				fieldIDNameMap[def.Filepath][enum.Name][field.Integer] = field.Name
+				fieldIDNameMap[*def.Filepath][enum.Name][field.Integer] = field.Name
 			}
 		}
 	}
@@ -1044,11 +1044,11 @@ func getNonReservedFields(lock Protolock) lockNamesMap {
 	nameIDMap := make(lockNamesMap)
 
 	for _, def := range lock.Definitions {
-		if nameIDMap[def.Filepath] == nil {
-			nameIDMap[def.Filepath] = make(map[string]map[string]int)
+		if nameIDMap[*def.Filepath] == nil {
+			nameIDMap[*def.Filepath] = make(map[string]map[string]int)
 		}
 		for _, msg := range def.Def.Messages {
-			getNonReservedFieldsRecursive(nameIDMap, def.Filepath, "", msg)
+			getNonReservedFieldsRecursive(nameIDMap, *def.Filepath, "", msg)
 		}
 	}
 
@@ -1061,15 +1061,15 @@ func getNonReservedEnumFields(lock Protolock) lockNamesMap {
 	nameIDMap := make(lockNamesMap)
 
 	for _, def := range lock.Definitions {
-		if nameIDMap[def.Filepath] == nil {
-			nameIDMap[def.Filepath] = make(map[string]map[string]int)
+		if nameIDMap[*def.Filepath] == nil {
+			nameIDMap[*def.Filepath] = make(map[string]map[string]int)
 		}
 		for _, enum := range def.Def.Enums {
 			for _, field := range enum.EnumFields {
-				if nameIDMap[def.Filepath][enum.Name] == nil {
-					nameIDMap[def.Filepath][enum.Name] = make(map[string]int)
+				if nameIDMap[*def.Filepath][enum.Name] == nil {
+					nameIDMap[*def.Filepath][enum.Name] = make(map[string]int)
 				}
-				nameIDMap[def.Filepath][enum.Name][field.Name] = field.Integer
+				nameIDMap[*def.Filepath][enum.Name][field.Name] = field.Integer
 			}
 		}
 	}
@@ -1097,11 +1097,11 @@ func getMapMap(lock Protolock) lockMapMap {
 	nameTypeMap := make(lockMapMap)
 
 	for _, def := range lock.Definitions {
-		if nameTypeMap[def.Filepath] == nil {
-			nameTypeMap[def.Filepath] = make(map[string]map[string]Map)
+		if nameTypeMap[*def.Filepath] == nil {
+			nameTypeMap[*def.Filepath] = make(map[string]map[string]Map)
 		}
 		for _, msg := range def.Def.Messages {
-			getMapMapRecursive(nameTypeMap, def.Filepath, "", msg)
+			getMapMapRecursive(nameTypeMap, *def.Filepath, "", msg)
 		}
 	}
 
@@ -1133,11 +1133,11 @@ func getFieldMap(lock Protolock) lockFieldMap {
 	nameTypeMap := make(lockFieldMap)
 
 	for _, def := range lock.Definitions {
-		if nameTypeMap[def.Filepath] == nil {
-			nameTypeMap[def.Filepath] = make(map[string]map[string]Field)
+		if nameTypeMap[*def.Filepath] == nil {
+			nameTypeMap[*def.Filepath] = make(map[string]map[string]Field)
 		}
 		for _, msg := range def.Def.Messages {
-			getFieldMapRecursive(nameTypeMap, def.Filepath, "", msg)
+			getFieldMapRecursive(nameTypeMap, *def.Filepath, "", msg)
 		}
 	}
 
@@ -1150,15 +1150,15 @@ func getEnumFieldMap(lock Protolock) lockEnumFieldMap {
 	nameTypeMap := make(lockEnumFieldMap)
 
 	for _, def := range lock.Definitions {
-		if nameTypeMap[def.Filepath] == nil {
-			nameTypeMap[def.Filepath] = make(map[string]map[string]EnumField)
+		if nameTypeMap[*def.Filepath] == nil {
+			nameTypeMap[*def.Filepath] = make(map[string]map[string]EnumField)
 		}
 		for _, enum := range def.Def.Enums {
 			for _, field := range enum.EnumFields {
-				if nameTypeMap[def.Filepath][enum.Name] == nil {
-					nameTypeMap[def.Filepath][enum.Name] = make(map[string]EnumField)
+				if nameTypeMap[*def.Filepath][enum.Name] == nil {
+					nameTypeMap[*def.Filepath][enum.Name] = make(map[string]EnumField)
 				}
-				nameTypeMap[def.Filepath][enum.Name][field.Name] = field
+				nameTypeMap[*def.Filepath][enum.Name][field.Name] = field
 			}
 		}
 	}
@@ -1171,15 +1171,15 @@ func getEnumFieldMap(lock Protolock) lockEnumFieldMap {
 func getServicesRPCsMap(lock Protolock) lockNamesMap {
 	servicesRPCsMap := make(lockNamesMap)
 	for _, def := range lock.Definitions {
-		if servicesRPCsMap[def.Filepath] == nil {
-			servicesRPCsMap[def.Filepath] = make(map[string]map[string]int)
+		if servicesRPCsMap[*def.Filepath] == nil {
+			servicesRPCsMap[*def.Filepath] = make(map[string]map[string]int)
 		}
 		for _, svc := range def.Def.Services {
-			if servicesRPCsMap[def.Filepath][svc.Name] == nil {
-				servicesRPCsMap[def.Filepath][svc.Name] = make(map[string]int)
+			if servicesRPCsMap[*def.Filepath][svc.Name] == nil {
+				servicesRPCsMap[*def.Filepath][svc.Name] = make(map[string]int)
 			}
 			for _, rpc := range svc.RPCs {
-				servicesRPCsMap[def.Filepath][svc.Name][rpc.Name]++
+				servicesRPCsMap[*def.Filepath][svc.Name][rpc.Name]++
 			}
 		}
 	}
@@ -1193,15 +1193,15 @@ func getRPCMap(lock Protolock) lockRPCMap {
 	rpcTypeMap := make(lockRPCMap)
 
 	for _, def := range lock.Definitions {
-		if rpcTypeMap[def.Filepath] == nil {
-			rpcTypeMap[def.Filepath] = make(map[string]map[string]RPC)
+		if rpcTypeMap[*def.Filepath] == nil {
+			rpcTypeMap[*def.Filepath] = make(map[string]map[string]RPC)
 		}
 		for _, svc := range def.Def.Services {
 			for _, rpc := range svc.RPCs {
-				if rpcTypeMap[def.Filepath][svc.Name] == nil {
-					rpcTypeMap[def.Filepath][svc.Name] = make(map[string]RPC)
+				if rpcTypeMap[*def.Filepath][svc.Name] == nil {
+					rpcTypeMap[*def.Filepath][svc.Name] = make(map[string]RPC)
 				}
-				rpcTypeMap[def.Filepath][svc.Name][rpc.Name] = rpc
+				rpcTypeMap[*def.Filepath][svc.Name][rpc.Name] = rpc
 			}
 		}
 	}

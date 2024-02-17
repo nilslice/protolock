@@ -28,10 +28,10 @@ func HandleReport(report *Report, w io.Writer, err error) (int, error) {
 
 func orderByPathAndMessage(warnings []Warning) {
 	sort.Slice(warnings, func(i, j int) bool {
-		if warnings[i].Filepath < warnings[j].Filepath {
+		if warnings[i].Filepath.PathName < warnings[j].Filepath.PathName {
 			return true
 		}
-		if warnings[i].Filepath > warnings[j].Filepath {
+		if warnings[i].Filepath.PathName > warnings[j].Filepath.PathName {
 			return false
 		}
 		return warnings[i].Message < warnings[j].Message
